@@ -96,6 +96,19 @@ NS_NEURON* create_neuron()
 	return neuron;
 }
 
+NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input)
+{
+	NS_MODEL* model = malloc(sizeof(NS_MODEL));
+	if (!model)
+		return 0;
+	model->input_neurons = input_neurons;
+	for (uint64_t i = 0; i < n_input; ++i)
+	{
+
+	}
+	return model;
+}
+
 void init_neuron(NS_NEURON* neuron)
 {
 	if(neuron->parents)
@@ -107,4 +120,26 @@ void init_neuron(NS_NEURON* neuron)
 	neuron->n_parents = 0;
 	neuron->n_children = 0;
 	neuron->function = 0;
+}
+
+float neuron_forward(NS_NEURON* neuron)
+{
+	NS_SYNAPSE* parent_synapse = neuron->parents;
+	// If the neuron is an input layer neuron, just return its value
+	if (!parent_synapse->parent && parent_synapse->input_value)
+		return parent_synapse->input_value;
+	float inputs = 0.f;
+	for (uint64_t i = 0; i < neuron->n_parents; ++i)
+		inputs += neuron_forward(neuron->parents[i]->parent) * neuron->parents[i]->weight;
+	return neuron->function(inputs);
+}
+
+NS_NEURON* get_final_child(NS_NEURON* neuron)
+{
+	return neuron->n_children ? get_final_child(((NS_SYNAPSE*)neuron->children)->child) : neuron;
+}
+
+void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs)
+{
+
 }

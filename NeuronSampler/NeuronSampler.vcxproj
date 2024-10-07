@@ -129,10 +129,13 @@
   <ItemGroup>
     <ClCompile Include="main.c" />
     <ClCompile Include="neuron.c" />
+    <ClCompile Include="neuron_functions.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libs.h" />
     <ClInclude Include="neuron.h" />
+    <ClInclude Include="neuron_functions.h" />
+    <ClInclude Include="train.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
