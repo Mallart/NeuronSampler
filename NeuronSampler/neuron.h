@@ -1,5 +1,6 @@
 #pragma once
 #include "neuron_functions.h";
+#define BIND_CONST_LAYERS(parent_layer, child_layer) bulk_bind_layers(parent_layer, size_of_neuron_array(parent_layer), child_layer, size_of_neuron_array(child_layer))
 
 struct NS_NEURON;
 struct NS_SYNAPSE;
@@ -23,8 +24,8 @@ typedef struct NS_NEURON
 {
 	uint64_t n_parents;
 	uint64_t n_children;
-	struct NS_SYNAPSE** parents;
-	struct NS_SYNAPSE** children;
+	NS_SYNAPSE** parents;
+	NS_SYNAPSE** children;
 	float bias;
 	float (*function)(float); // activation function
 } NS_NEURON;
@@ -57,9 +58,14 @@ NS_NEURON* create_neuron();
 NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input);
 // reset an existing neuron.
 void init_neuron(NS_NEURON* neuron);
-
+// forward propagation of a neuron
 float neuron_forward(NS_NEURON* neuron);
 // returns the final child from the given neuron.
 NS_NEURON* get_final_child(NS_NEURON* neuron);
-
+// sets model input values
 void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs);
+// binds two layers, connecting every single neuron from layer2 to every single neuron of layer2.
+void bulk_bind_layers(NS_NEURON** parent_layer, uint64_t n_parent_layer_neurons, NS_NEURON** child_layer, uint64_t n_child_layer_neurons);
+// returns the size of a const neuron array (layer).
+// caution: doesn't work with dynamically created layers.
+uint64_t size_of_neuron_array(NS_NEURON* layer[]);

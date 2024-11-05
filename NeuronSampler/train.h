@@ -4,4 +4,5 @@
 #include "neuron.h"
 // includes multi threading purposes and training functions.
 
-void train_model(NS_MODEL* model, uint64_t n_iterations);
+// epoch is the number of trainings.
+void train_model(NS_MODEL* model, uint64_t epoch);

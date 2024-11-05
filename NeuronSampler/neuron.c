@@ -48,16 +48,16 @@ NS_SYNAPSE* create_synapse(NS_NEURON* parent, NS_NEURON* child)
 	synapse->parent = parent;
 	synapse->child = child;
 	
-	if (!array_exists(parent->children, parent->n_children, child))
+	if (parent && !array_exists(parent->children, parent->n_children, child))
 	{
 		parent->children = array_append(parent->children, parent->n_children, synapse);
 		parent->n_children++;
 	}
 	
-	if (!array_exists(child->parents, child->n_parents, parent))
+	if (child && !array_exists(child->parents, child->n_parents, parent))
 	{
 		child->parents = array_append(child->parents, child->n_parents, synapse);
-		parent->n_parents++;
+		child->n_parents++;
 	}
 
 	return synapse;
@@ -85,14 +85,10 @@ void destroy_synapse(NS_SYNAPSE* synapse)
 
 NS_NEURON* create_neuron()
 {
-	NS_NEURON* neuron = malloc(sizeof(NS_NEURON));
+	NS_NEURON* neuron = calloc(1, sizeof(NS_NEURON));
 	if (!neuron)
 		return 0;
-	neuron->parents = malloc(sizeof(NS_SYNAPSE*));
-	neuron->children = malloc(sizeof(NS_SYNAPSE*));
-	neuron->n_parents = 0;
-	neuron->n_children = 0;
-	neuron->function = 0;
+	init_neuron(neuron);
 	return neuron;
 }
 
@@ -103,9 +99,8 @@ NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input)
 		return 0;
 	model->input_neurons = input_neurons;
 	for (uint64_t i = 0; i < n_input; ++i)
-	{
-
-	}
+		// no parent means it's an input neuron
+		create_synapse(0, model->input_neurons[i]);
 	return model;
 }
 
@@ -115,11 +110,12 @@ void init_neuron(NS_NEURON* neuron)
 		free(neuron->parents);
 	if(neuron->children)
 		free(neuron->children);
-	neuron->parents = malloc(sizeof(NS_SYNAPSE*));
-	neuron->children = malloc(sizeof(NS_SYNAPSE*));
+	neuron->parents = malloc(sizeof(NS_SYNAPSE**));
+	neuron->children = malloc(sizeof(NS_SYNAPSE**));
 	neuron->n_parents = 0;
 	neuron->n_children = 0;
 	neuron->function = 0;
+	neuron->bias = 0;
 }
 
 float neuron_forward(NS_NEURON* neuron)
@@ -141,5 +137,18 @@ NS_NEURON* get_final_child(NS_NEURON* neuron)
 
 void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs)
 {
+	for (uint64_t i = 0; i < n_inputs; ++i)
+		model->input_neurons[i]->parents[0]->input_value = input_values[i];
+}
 
+void bulk_bind_layers(NS_NEURON** parent_layer, uint64_t n_parent_layer_neurons, NS_NEURON** child_layer, uint64_t n_child_layer_neurons)
+{
+	for (uint64_t i = 0; i < n_parent_layer_neurons; ++i)
+		for (uint64_t ii = 0; ii < n_child_layer_neurons; ++ii)
+			create_synapse(parent_layer[i], child_layer[ii]);
+}
+
+uint64_t size_of_neuron_array(NS_NEURON* layer[])
+{
+	return sizeof(layer) / sizeof(NS_NEURON*);
 }
