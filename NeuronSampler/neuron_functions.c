@@ -9,3 +9,8 @@ float sigmoid(float x)
 {
     return 1.f / (1 + exp(-x));
 }
+
+float raw(float x)
+{
+    return x;
+}

@@ -1,54 +1,5 @@
 #include "neuron.h"
 
-void* array_append(void** array, uint64_t array_size, void* element)
-{
-	/*
-	if (!array)
-	{
-		array = malloc(array_size * sizeof(element));
-		*array = element;
-		return array;
-	}
-	*/
-	uint64_t i = 0;
-	for (; i < array_size; ++i)
-		if (!array[i])
-			break;
-	// full array, have to realloc
-	if (i == array_size - 1)
-	{
-		array = realloc(array, array_size + sizeof(element));
-		array[array_size] = element;
-		return array;
-	}
-	// free space detected, put a pointer in it
-	array[i] = element;
-	return array;
-}
-
-void* array_append_no_duplicate(void** array, uint64_t array_size, void* element)
-{
-	if (!array_exists(array, array_size, element))
-		return array_append(array, array_size, element);
-	return array;
-}
-
-void array_remove(void** array, uint64_t array_size, void* element)
-{
-	for (uint64_t i = 0; i < array_size; ++i)
-		if (array[i] == element)
-			array[i] = 0;
-}
-
-bool array_exists(void** array, uint64_t array_size, void* element)
-{
-	if (!array)
-		return false;
-	for (uint64_t i = 0; i < array_size; ++i)
-		if ((void*)(array + i) && array[i] == element)
-			return true;
-	return false;
-}
 
 NS_SYNAPSE* create_synapse(NS_NEURON* parent, NS_NEURON* child)
 {
@@ -142,9 +93,14 @@ float neuron_forward(NS_NEURON* neuron)
 	return neuron->function(inputs);
 }
 
-NS_NEURON* get_final_child(NS_NEURON* neuron)
+NS_ARRAY* get_final_children(NS_NEURON* neuron)
 {
-	return neuron->n_children ? get_final_child(((NS_SYNAPSE*)neuron->children)->child) : neuron;
+	NS_ARRAY* final_neurons = ns_array_create();
+	if (neuron->n_children == 0)
+		ns_array_append(final_neurons, neuron);
+	else if(neuron->children)
+		return get_final_children(neuron->children[0]);
+	return final_neurons;
 }
 
 void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs)
@@ -160,7 +116,8 @@ void bulk_bind_layers(NS_NEURON** parent_layer, uint64_t n_parent_layer_neurons,
 			create_synapse(parent_layer[i], child_layer[ii]);
 }
 
-uint64_t size_of_neuron_array(NS_NEURON* layer[])
+void layer_set_function(float (*function)(float), NS_NEURON** layer, uint64_t n_neurons)
 {
-	return sizeof(layer) / sizeof(NS_NEURON*);
+	for (uint64_t i = 0; i < n_neurons; ++i)
+		layer[i]->function = function;
 }

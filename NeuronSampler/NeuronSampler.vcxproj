@@ -127,11 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="data_structures.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="neuron.c" />
     <ClCompile Include="neuron_functions.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="data_structures.h" />
     <ClInclude Include="libs.h" />
     <ClInclude Include="neuron.h" />
     <ClInclude Include="neuron_functions.h" />
