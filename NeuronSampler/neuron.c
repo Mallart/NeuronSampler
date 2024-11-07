@@ -2,6 +2,14 @@
 
 void* array_append(void** array, uint64_t array_size, void* element)
 {
+	/*
+	if (!array)
+	{
+		array = malloc(array_size * sizeof(element));
+		*array = element;
+		return array;
+	}
+	*/
 	uint64_t i = 0;
 	for (; i < array_size; ++i)
 		if (!array[i])
@@ -15,7 +23,7 @@ void* array_append(void** array, uint64_t array_size, void* element)
 	}
 	// free space detected, put a pointer in it
 	array[i] = element;
-	return 0;
+	return array;
 }
 
 void* array_append_no_duplicate(void** array, uint64_t array_size, void* element)
@@ -34,8 +42,10 @@ void array_remove(void** array, uint64_t array_size, void* element)
 
 bool array_exists(void** array, uint64_t array_size, void* element)
 {
+	if (!array)
+		return false;
 	for (uint64_t i = 0; i < array_size; ++i)
-		if (array[i] == element)
+		if ((void*)(array + i) && array[i] == element)
 			return true;
 	return false;
 }
@@ -47,6 +57,8 @@ NS_SYNAPSE* create_synapse(NS_NEURON* parent, NS_NEURON* child)
 		return 0;
 	synapse->parent = parent;
 	synapse->child = child;
+	synapse->input_value = 0;
+	synapse->weight = 0;
 	
 	if (parent && !array_exists(parent->children, parent->n_children, child))
 	{

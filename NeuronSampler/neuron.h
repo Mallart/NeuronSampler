@@ -1,6 +1,6 @@
 #pragma once
 #include "neuron_functions.h";
-#define BIND_CONST_LAYERS(parent_layer, child_layer) bulk_bind_layers(parent_layer, size_of_neuron_array(parent_layer), child_layer, size_of_neuron_array(child_layer))
+#define BIND_CONST_LAYERS(parent_layer, child_layer) bulk_bind_layers(parent_layer, sizeof(parent_layer) / sizeof(NS_NEURON*), child_layer, sizeof(child_layer) / sizeof(NS_NEURON*))
 
 struct NS_NEURON;
 struct NS_SYNAPSE;
