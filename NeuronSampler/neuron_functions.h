@@ -1,7 +1,39 @@
 #pragma once
 #include "libs.h"
 
-float relu(float x);
-float sigmoid(float x);
+#pragma region R_NEURON_FUNCTIONS
+
+
+double relu(double x);
+double sigmoid(double x);
 // returns the raw value of this neuron (no edition)
-float raw(float x);
+double raw(double x);
+
+static const double (*NEURON_FUNCTIONS[])(double) = 
+{ 
+    relu, 
+    sigmoid, 
+    raw 
+}; 
+enum NEURON_ACTIVATION_FUNCTIONS {
+    RELU, 
+    SIGMOID, 
+    RAW,
+};
+
+#pragma endregion For everything related to the forward pass / propagation of results
+
+#pragma region R_ERROR_FUNCTIONS
+// to compute the error rate and learning gradients.
+double average_quadratic_error(uint64_t n_results, double* result, double* expected);
+
+#pragma region R_DERIVATIVES
+double d_relu(double x);
+double d_sigmoid(double x);
+double d_raw(double x);
+// compute the derivative of any function in one X point.
+double d_function(double(*f)(double), double x);
+
+#pragma endregion
+
+#pragma region To compute errors, gradients, and make the model learn.

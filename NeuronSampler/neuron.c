@@ -55,15 +55,34 @@ NS_NEURON* create_neuron()
 	return neuron;
 }
 
-NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input)
+NS_NEURON** create_layer(uint64_t n)
+{
+	NS_NEURON** neurons = calloc(n, sizeof(NS_NEURON*));
+	if (!neurons)
+		return 0;
+	for (uint64_t i = 0; i < n; ++i)
+		neurons[i] = create_neuron();
+	return neurons;
+}
+
+NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input, NS_NEURON** output, uint64_t n_output)
 {
 	NS_MODEL* model = malloc(sizeof(NS_MODEL));
 	if (!model)
 		return 0;
+	model->n_input_neurons = n_input;
 	model->input_neurons = input_neurons;
+	model->output_neurons = output;
+	model->n_output_neurons = n_output;
 	for (uint64_t i = 0; i < n_input; ++i)
+	{
 		// no parent means it's an input neuron
 		create_synapse(0, model->input_neurons[i]);
+		model->input_neurons[i]->role = ROLE_INPUT;
+
+	}
+	for (uint64_t i = 0; i < n_output; ++i)
+		model->output_neurons[i]->role |= ROLE_OUTPUT;
 	return model;
 }
 
@@ -79,6 +98,8 @@ void init_neuron(NS_NEURON* neuron)
 	neuron->n_children = 0;
 	neuron->function = 0;
 	neuron->bias = 0;
+	neuron->value = 0;
+	neuron->role = 0;
 }
 
 float neuron_forward(NS_NEURON* neuron)
@@ -87,20 +108,34 @@ float neuron_forward(NS_NEURON* neuron)
 	// If the neuron is an input layer neuron, just return its value
 	if (!parent_synapse->parent && parent_synapse->input_value)
 		return parent_synapse->input_value;
-	float inputs = 0.f;
+	double inputs = 0.f;
 	for (uint64_t i = 0; i < neuron->n_parents; ++i)
-		inputs += neuron_forward(neuron->parents[i]->parent) * neuron->parents[i]->weight;
-	return neuron->function(inputs);
+		if (neuron->parents[i]->parent && neuron->parents[i]->parent->value)
+			inputs += neuron->parents[i]->parent->value * neuron->parents[i]->weight;
+		else if(neuron->parents[i]->parent)
+			inputs += neuron_forward(neuron->parents[i]->parent) * neuron->parents[i]->weight;
+	double _val = neuron->function(inputs + neuron->bias);
+	neuron->value = _val;
+	return _val;
 }
 
-NS_ARRAY* get_final_children(NS_NEURON* neuron)
+void neuron_backwards(NS_NEURON* neuron, double target, double learning_rate)
 {
-	NS_ARRAY* final_neurons = ns_array_create();
-	if (neuron->n_children == 0)
-		ns_array_append(final_neurons, neuron);
-	else if(neuron->children)
-		return get_final_children(neuron->children[0]);
-	return final_neurons;
+	// TODO | FIX this is buggy
+	if (neuron->role == ROLE_INPUT);
+		return;
+	// it's not an input neuron
+	double error = neuron->value - target;
+	neuron->delta = error * d_function(neuron->function, neuron->value);
+	for (uint64_t i = 0; i < neuron->n_parents; ++i)
+	{
+		if (!neuron->parents[i]->parent)
+			continue;
+		neuron->parents[i]->parent->delta += neuron->delta * neuron->parents[i]->weight;
+		neuron->parents[i]->weight -= learning_rate * neuron->delta * neuron->parents[i]->parent->value;
+		neuron_backwards(neuron->parents[i], REPLACE_THIS_VALUE_WITH_WORKING_ONE, learning_rate);
+	}
+	neuron->bias -= learning_rate * neuron->delta;
 }
 
 void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs)
@@ -120,4 +155,28 @@ void layer_set_function(float (*function)(float), NS_NEURON** layer, uint64_t n_
 {
 	for (uint64_t i = 0; i < n_neurons; ++i)
 		layer[i]->function = function;
+}
+
+char* serialize_neuron(NS_NEURON* neuron)
+{
+	return 0;
+}
+
+NS_NEURON* deserialize_neuron(char* buffer)
+{
+	return 0;
+}
+
+void model_feed_values(NS_MODEL* model, NS_TARGET* target)
+{
+	// constantly gets removed for no reason, so I put a save here
+	// every variable seem corrupted atp
+	NS_NEURON_ARRAY* ns_output = ns_array_create_from_buffer(model->output_neurons, model->n_output_neurons);
+	uint64_t n_values = min(model->n_input_neurons, target->n_inputs);
+	for (uint64_t i = 0; i < n_values; ++i)
+	{
+		model->input_neurons[i]->role |= LIT_STATE;
+		model->input_neurons[i]->value = target->inputs[i];
+	}
+	model->output_neurons = array_create_from_ns_array(ns_output);
 }

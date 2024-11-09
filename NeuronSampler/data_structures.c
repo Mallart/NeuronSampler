@@ -48,6 +48,14 @@ bool array_exists(void** array, uint64_t array_size, void* element)
 	return false;
 }
 
+void** array_create_from_ns_array(NS_ARRAY* array)
+{
+	void** arr = calloc(array->size, sizeof(array->elements));
+	for (uint64_t i = 0; i < array->size; ++i)
+		arr[i] = array->elements[i];
+	return arr;
+}
+
 NS_ARRAY* ns_array_create()
 {
 	return calloc(1, sizeof(NS_ARRAY));
@@ -86,6 +94,14 @@ NS_ARRAY* ns_array_append_no_duplicate(NS_ARRAY* array, void* element)
 		return array;
 	}
 	return array;
+}
+
+NS_ARRAY* ns_array_create_from_buffer(void** array, uint64_t size)
+{
+	NS_ARRAY* ns_array = ns_array_create();
+	for (uint64_t i = 0; i < size; ++i)
+		ns_array_append(ns_array, array[i]);
+	return ns_array;
 }
 
 void ns_array_remove(NS_ARRAY* array, void* element)
