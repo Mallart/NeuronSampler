@@ -41,5 +41,13 @@ double d_raw(double x)
 
 double d_function(double(*f)(double), double x)
 {
+    if (f == raw)
+        return d_raw(x);
+    if (f == sigmoid)
+        return d_sigmoid(x);
+    if (f == relu)
+        return d_relu(x);
+    if (f == tanh)
+        return 1 - pow(exp(x) - exp(-x), 2) / pow(exp(x) + exp(-x), 2);
     return (f(x + NS_EPSILON) - f(x)) / NS_EPSILON;
 }

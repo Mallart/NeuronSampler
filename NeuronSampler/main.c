@@ -86,7 +86,7 @@ void test()
 	model_feed_values(test_model, &target);
 	// it appears that the model's output neuron is freed near here for an unkown reason. 
 	// That's why the program crashes.
-	clock_t training = benchmark_training(train_model, test_model, &target, 100000, .00000003f);
+	clock_t training = benchmark_training(train_model, test_model, &target, 100000, NS_EPSILON);
 	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f", 
 		training, 
 		test_model->output_neurons[0]->value,
