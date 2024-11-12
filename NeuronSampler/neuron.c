@@ -82,11 +82,13 @@ NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input, NS_NEURON** 
 	{
 		// no parent means it's an input neuron
 		create_synapse(0, model->input_neurons[i]);
-		model->input_neurons[i]->role = ROLE_INPUT;
+		model->input_neurons[i]->role |= ROLE_INPUT;
 
 	}
 	for (uint64_t i = 0; i < n_output; ++i)
 		model->output_neurons[i]->role |= ROLE_OUTPUT;
+	layer_set_function(raw, model->input_neurons, model->n_input_neurons);
+
 	return model;
 }
 

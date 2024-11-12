@@ -23,12 +23,14 @@ NS_MODEL* example_model()
 	NS_NEURON* output[] = { create_neuron() };
 
 	// then, we choose an activation function for each neuron / layer
+
+	// this one is automatically set when we create the model
 	layer_set_function(raw, input, CONST_LAYER_SIZE(input));
-	layer_set_function(relu, layer1, CONST_LAYER_SIZE(layer1));
-	layer_set_function(sigmoid, layer2, CONST_LAYER_SIZE(layer2));
-	layer_set_function(sigmoid, layer3, CONST_LAYER_SIZE(layer3));
-	layer_set_function(sigmoid, layer4, CONST_LAYER_SIZE(layer4));
-	layer_set_function(sigmoid, output, CONST_LAYER_SIZE(output));
+	layer_set_function(tanh, layer1, CONST_LAYER_SIZE(layer1));
+	layer_set_function(tanh, layer2, CONST_LAYER_SIZE(layer2));
+	layer_set_function(tanh, layer3, CONST_LAYER_SIZE(layer3));
+	layer_set_function(tanh, layer4, CONST_LAYER_SIZE(layer4));
+	layer_set_function(raw, output, CONST_LAYER_SIZE(output));
 	
 	// we have to bind layers together
 	BIND_CONST_LAYERS(input, layer1);
@@ -86,7 +88,7 @@ void test()
 	model_feed_values(test_model, &target);
 	// it appears that the model's output neuron is freed near here for an unkown reason. 
 	// That's why the program crashes.
-	clock_t training = benchmark_training(train_model, test_model, &target, 100000, NS_EPSILON);
+	clock_t training = benchmark_training(train_model, test_model, &target, 100000, .001);
 	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f", 
 		training, 
 		test_model->output_neurons[0]->value,
