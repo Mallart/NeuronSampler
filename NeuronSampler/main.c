@@ -7,7 +7,6 @@
 
 - Serialization / deserialization
 - Finishing training (implementing backpropagation compared to an ideal model NS_TARGET)
-- Review the forward pass to ensure it's working properly
 - Multithreading
 - GPU support
 
@@ -87,8 +86,13 @@ void test()
 	model_feed_values(test_model, &target);
 	// it appears that the model's output neuron is freed near here for an unkown reason. 
 	// That's why the program crashes.
-	clock_t training = benchmark_training(train_model, test_model, &target, 100000);
-	printf("Model training time (ms): %i\n", training);
+	clock_t training = benchmark_training(train_model, test_model, &target, 100000, .00000003f);
+	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f", 
+		training, 
+		test_model->output_neurons[0]->value,
+		test_model->output_neurons[0]->bias,
+		test_model->output_neurons[0]->parents[0]->weight
+	);
 }
 #endif
 

@@ -4,7 +4,7 @@
 // when everything is still not set up and I needed a placeholder value.
 #define REPLACE_THIS_VALUE_WITH_WORKING_ONE 0
 #define CONST_ARRAY_SIZE(type, array) sizeof(array) / sizeof(type)
-
+#define NS_EPSILON .0000000001
 //typedef thrd_t thread;
 
 typedef uint32_t NS_FLAG;

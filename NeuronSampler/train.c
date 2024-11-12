@@ -2,7 +2,6 @@
 
 void train_model(NS_MODEL* model, NS_TARGET* target, uint64_t epoch, double precision)
 {
-	//NS_VALUE** target_values = target->inputs;
 	for(uint64_t _e = 0; _e < epoch; ++_e)
 		for (uint64_t i = 0; i < model->n_output_neurons; ++i)
 		{
@@ -37,12 +36,12 @@ clock_t benchmark(void* (*f)(void))
 	return end - start;
 }
 
-clock_t benchmark_training(void (*training)(NS_MODEL*, NS_TARGET*, uint64_t), NS_MODEL* nsm, NS_TARGET* nst, uint64_t epoch)
+clock_t benchmark_training(void (*training)(NS_MODEL*, NS_TARGET*, uint64_t), NS_MODEL* nsm, NS_TARGET* nst, uint64_t epoch, double learning_rate)
 {
 	clock_t
 		start = clock(),
 		end;
-	training(nsm, nst, epoch);
+	training(nsm, nst, epoch, learning_rate);
 	end = clock();
 	return end - start;
 }

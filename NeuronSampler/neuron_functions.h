@@ -1,5 +1,6 @@
 #pragma once
 #include "libs.h"
+#include "data_structures.h"
 
 #pragma region R_NEURON_FUNCTIONS
 

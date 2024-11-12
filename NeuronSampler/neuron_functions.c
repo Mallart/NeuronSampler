@@ -41,5 +41,5 @@ double d_raw(double x)
 
 double d_function(double(*f)(double), double x)
 {
-    return (f(x + LDBL_EPSILON) - f(x)) / LDBL_EPSILON;
+    return (f(x + NS_EPSILON) - f(x)) / NS_EPSILON;
 }

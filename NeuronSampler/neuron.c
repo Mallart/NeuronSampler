@@ -3,6 +3,7 @@
 
 NS_SYNAPSE* create_synapse(NS_NEURON* parent, NS_NEURON* child)
 {
+	srand(time(0));
 	NS_SYNAPSE* synapse = malloc(sizeof(NS_SYNAPSE));
 	if (!synapse)
 		return 0;
@@ -12,8 +13,7 @@ NS_SYNAPSE* create_synapse(NS_NEURON* parent, NS_NEURON* child)
 		parent->role = ROLE_HIDDEN;
 	if (child && !(child->role & ROLE_INPUT | child->role & ROLE_OUTPUT | child->role & ROLE_HIDDEN))
 		child->role = ROLE_HIDDEN;
-	synapse->input_value = 0;
-	synapse->weight = 0;
+	synapse->weight = fmod(((double)rand()) / 1000000, 1.f);
 	
 	if (parent && !array_exists(parent->children, parent->n_children, child))
 	{
@@ -111,6 +111,7 @@ double neuron_forward(NS_NEURON* neuron)
 {
 	if (!neuron->role)
 		return .0f;
+	neuron->role |= LIT_STATE;
 	NS_SYNAPSE* parent_synapse = neuron->parents;
 	// If the neuron is an input layer neuron, just return its value
 	if (!parent_synapse->parent && parent_synapse->input_value)
@@ -128,21 +129,30 @@ double neuron_forward(NS_NEURON* neuron)
 
 void neuron_backwards(NS_NEURON* neuron, double target, double learning_rate)
 {
-	// TODO | FIX this is buggy
 	if (neuron->role & ROLE_INPUT)
 		return;
 	// it's not an input neuron
-	double error = neuron->value - target;
-	neuron->delta = error * d_function(neuron->function, neuron->value);
+	double error = 0;
+	if(neuron->role & ROLE_OUTPUT)
+		error = neuron->value - target;
+	else
+	{
+		for (uint64_t i = 0; i < neuron->n_children; ++i)
+			error += neuron->children[i]->weight * neuron->children[i]->child->delta;
+		error = d_function(neuron->function, neuron->value) * error;
+	}
+	neuron->delta = error;
+	neuron->bias -= learning_rate * neuron->delta;
 	for (uint64_t i = 0; i < neuron->n_parents; ++i)
 	{
 		if (!neuron->parents[i]->parent)
 			continue;
-		neuron->parents[i]->parent->delta += neuron->delta * neuron->parents[i]->weight;
 		neuron->parents[i]->weight -= learning_rate * neuron->delta * neuron->parents[i]->parent->value;
-		neuron_backwards(neuron->parents[i]->parent, REPLACE_THIS_VALUE_WITH_WORKING_ONE, learning_rate);
+		neuron_backwards(neuron->parents[i]->parent, target, learning_rate);
 	}
-	neuron->bias -= learning_rate * neuron->delta;
+	// shuts down the neuron
+	if (neuron->role & LIT_STATE)
+		neuron->role &= ~LIT_STATE;;
 }
 
 void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs)
@@ -184,6 +194,7 @@ void model_feed_values(NS_MODEL* model, NS_TARGET* target)
 	{
 		model->input_neurons[i]->role |= LIT_STATE;
 		model->input_neurons[i]->value = target->inputs[i];
+		model->input_neurons[i]->parents[0]->input_value = target->inputs[i];
 	}
 	*model->output_neurons = ns_output;
 }
@@ -214,11 +225,17 @@ void delete_synapse(NS_SYNAPSE* synapse)
 	// sets a free space in array for both parent and child neurons
 	for (uint64_t i = 0; i < synapse->parent->n_children; ++i)
 		if (synapse->parent->children[i] == synapse)
+		{
 			synapse->parent->children[i] = 0;
+			synapse->parent->n_children--;
+		}
 	synapse->parent = 0;
 	for (uint64_t i = 0; i < synapse->child->n_parents; ++i)
 		if (synapse->child->parents[i] == synapse)
+		{
 			synapse->child->parents[i] = 0;
+			synapse->child->n_parents--;
+		}
 	synapse->child = 0;
 	synapse->weight = 0;
 	free(synapse);
