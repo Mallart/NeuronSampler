@@ -5,6 +5,9 @@
 // caution: doesn't work with dynamically created layers.
 #define CONST_LAYER_SIZE(layer) CONST_ARRAY_SIZE(NS_NEURON*, layer)
 #define BIND_CONST_LAYERS(parent_layer, child_layer) bulk_bind_layers(parent_layer, sizeof(parent_layer) / sizeof(NS_NEURON*), child_layer, sizeof(child_layer) / sizeof(NS_NEURON*))
+
+static uint64_t NEURON_NUMBER = 1;
+
 struct NS_NEURON;
 struct NS_SYNAPSE;
 
@@ -36,6 +39,8 @@ typedef struct NS_NEURON
 	double bias;
 	double delta;
 	NS_FLAG role;
+	// temporary and will be removed in a future version
+	uint64_t id;
 } NS_NEURON;
 
 // target version of model for a neural network.
@@ -52,8 +57,8 @@ typedef struct NS_MODEL
 {
 	// model's input neurons
 	NS_NEURON** input_neurons;
-	uint64_t n_input_neurons;
 	NS_NEURON** output_neurons;
+	uint64_t n_input_neurons;
 	uint64_t n_output_neurons;
 } NS_MODEL;
 
@@ -69,9 +74,9 @@ NS_NEURON** create_layer(uint64_t n);
 NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input, NS_NEURON** output_neurons, uint64_t n_output);
 // reset an existing neuron.
 void init_neuron(NS_NEURON* neuron);
-// forward propagation of a neuron
-float neuron_forward(NS_NEURON* neuron);
-// backward propagation to adjust the weights and biases
+// forward propagation of a neuron (neuron parameter is the last / output neuron)
+double neuron_forward(NS_NEURON* neuron);
+// backward propagation to adjust the weights and biases (neuron parameter is the last / output neuron)
 void neuron_backwards(NS_NEURON* neuron, double target, double learning_rate);
 // sets model input values
 void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs);
@@ -86,3 +91,11 @@ NS_NEURON* deserialize_neuron(char* buffer);
 // will replace all input values with the given ones.
 // prepares the model to be trained.
 void model_feed_values(NS_MODEL* model, NS_TARGET* target);
+
+void layer_add_current_neurons(NS_LAYER* layer, NS_NEURON* neuron);
+NS_LAYER* model_get_all_neurons(NS_MODEL* model);
+
+void delete_synapse(NS_SYNAPSE* synapse);
+void delete_neuron(NS_NEURON* neuron);
+void delete_layer(NS_LAYER* layer);
+void delete_model(NS_MODEL* model);

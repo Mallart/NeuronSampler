@@ -27,8 +27,8 @@ NS_MODEL* example_model()
 	layer_set_function(raw, input, CONST_LAYER_SIZE(input));
 	layer_set_function(relu, layer1, CONST_LAYER_SIZE(layer1));
 	layer_set_function(sigmoid, layer2, CONST_LAYER_SIZE(layer2));
-	layer_set_function(sigmoid, layer3, CONST_LAYER_SIZE(layer2));
-	layer_set_function(sigmoid, layer4, CONST_LAYER_SIZE(layer2));
+	layer_set_function(sigmoid, layer3, CONST_LAYER_SIZE(layer3));
+	layer_set_function(sigmoid, layer4, CONST_LAYER_SIZE(layer4));
 	layer_set_function(sigmoid, output, CONST_LAYER_SIZE(output));
 	
 	// we have to bind layers together
@@ -87,7 +87,7 @@ void test()
 	model_feed_values(test_model, &target);
 	// it appears that the model's output neuron is freed near here for an unkown reason. 
 	// That's why the program crashes.
-	clock_t training = benchmark_training(train_model, test_model, REPLACE_THIS_VALUE_WITH_WORKING_ONE, 10000000);
+	clock_t training = benchmark_training(train_model, test_model, &target, 100000);
 	printf("Model training time (ms): %i\n", training);
 }
 #endif

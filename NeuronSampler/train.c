@@ -46,3 +46,14 @@ clock_t benchmark_training(void (*training)(NS_MODEL*, NS_TARGET*, uint64_t), NS
 	end = clock();
 	return end - start;
 }
+
+clock_t benchmark_model_creation(NS_MODEL*(*model_creation_function)(NS_MODEL*, NS_TARGET*, uint64_t), NS_MODEL* nsm, NS_TARGET* nst, uint64_t epoch)
+{
+	clock_t
+		start = clock(),
+		end;
+	NS_MODEL* _model = model_creation_function(nsm, nst, epoch);
+	end = clock();
+	delete_model(_model);
+	return end - start;
+}

@@ -8,6 +8,10 @@ NS_SYNAPSE* create_synapse(NS_NEURON* parent, NS_NEURON* child)
 		return 0;
 	synapse->parent = parent;
 	synapse->child = child;
+	if (parent && !(parent->role & ROLE_INPUT | parent->role & ROLE_OUTPUT | parent->role & ROLE_HIDDEN))
+		parent->role = ROLE_HIDDEN;
+	if (child && !(child->role & ROLE_INPUT | child->role & ROLE_OUTPUT | child->role & ROLE_HIDDEN))
+		child->role = ROLE_HIDDEN;
 	synapse->input_value = 0;
 	synapse->weight = 0;
 	
@@ -100,10 +104,13 @@ void init_neuron(NS_NEURON* neuron)
 	neuron->bias = 0;
 	neuron->value = 0;
 	neuron->role = 0;
+	neuron->id = NEURON_NUMBER++;
 }
 
-float neuron_forward(NS_NEURON* neuron)
+double neuron_forward(NS_NEURON* neuron)
 {
+	if (!neuron->role)
+		return .0f;
 	NS_SYNAPSE* parent_synapse = neuron->parents;
 	// If the neuron is an input layer neuron, just return its value
 	if (!parent_synapse->parent && parent_synapse->input_value)
@@ -122,7 +129,7 @@ float neuron_forward(NS_NEURON* neuron)
 void neuron_backwards(NS_NEURON* neuron, double target, double learning_rate)
 {
 	// TODO | FIX this is buggy
-	if (neuron->role == ROLE_INPUT);
+	if (neuron->role & ROLE_INPUT)
 		return;
 	// it's not an input neuron
 	double error = neuron->value - target;
@@ -133,7 +140,7 @@ void neuron_backwards(NS_NEURON* neuron, double target, double learning_rate)
 			continue;
 		neuron->parents[i]->parent->delta += neuron->delta * neuron->parents[i]->weight;
 		neuron->parents[i]->weight -= learning_rate * neuron->delta * neuron->parents[i]->parent->value;
-		neuron_backwards(neuron->parents[i], REPLACE_THIS_VALUE_WITH_WORKING_ONE, learning_rate);
+		neuron_backwards(neuron->parents[i]->parent, REPLACE_THIS_VALUE_WITH_WORKING_ONE, learning_rate);
 	}
 	neuron->bias -= learning_rate * neuron->delta;
 }
@@ -169,14 +176,84 @@ NS_NEURON* deserialize_neuron(char* buffer)
 
 void model_feed_values(NS_MODEL* model, NS_TARGET* target)
 {
-	// constantly gets removed for no reason, so I put a save here
+	// constantly gets removed for no reason, so I put a save here (thanks MSVC)
 	// every variable seem corrupted atp
-	NS_NEURON_ARRAY* ns_output = ns_array_create_from_buffer(model->output_neurons, model->n_output_neurons);
+	NS_NEURON* ns_output = model->output_neurons[0];
 	uint64_t n_values = min(model->n_input_neurons, target->n_inputs);
 	for (uint64_t i = 0; i < n_values; ++i)
 	{
 		model->input_neurons[i]->role |= LIT_STATE;
 		model->input_neurons[i]->value = target->inputs[i];
 	}
-	model->output_neurons = array_create_from_ns_array(ns_output);
+	*model->output_neurons = ns_output;
+}
+
+void layer_add_current_neurons(NS_LAYER* layer, NS_NEURON* neuron)
+{
+	ns_array_append_no_duplicate(layer, neuron);
+	if (!neuron->role & ROLE_OUTPUT)
+		for (uint64_t i = 0; i < neuron->n_children; ++i)
+			layer_add_current_neurons(layer, neuron->children[i]);
+	else
+		ns_array_append_no_duplicate(layer, neuron);
+}
+
+NS_LAYER* model_get_all_neurons(NS_MODEL* model)
+{
+	NS_LAYER* layer = malloc(sizeof(NS_LAYER));
+	for (uint64_t i = 0; i < model->n_input_neurons; ++i)
+		layer_add_current_neurons(layer, model->input_neurons[i]);
+	return layer;
+}
+
+void delete_synapse(NS_SYNAPSE* synapse)
+{
+	if (!synapse)
+		return;
+	synapse->input_value = 0;
+	// sets a free space in array for both parent and child neurons
+	for (uint64_t i = 0; i < synapse->parent->n_children; ++i)
+		if (synapse->parent->children[i] == synapse)
+			synapse->parent->children[i] = 0;
+	synapse->parent = 0;
+	for (uint64_t i = 0; i < synapse->child->n_parents; ++i)
+		if (synapse->child->parents[i] == synapse)
+			synapse->child->parents[i] = 0;
+	synapse->child = 0;
+	synapse->weight = 0;
+	free(synapse);
+}
+
+void delete_neuron(NS_NEURON* neuron)
+{
+	if (!neuron)
+		return;
+	for (uint64_t i = 0; i < neuron->n_parents; ++i)
+		delete_synapse(neuron->parents[i]);
+	for (uint64_t i = 0; i < neuron->n_children; ++i)
+		delete_synapse(neuron->children[i]);
+	neuron->bias = 0;
+	neuron->children = 0;
+	neuron->parents = 0;
+	neuron->delta = 0;
+	neuron->function = 0;
+	neuron->id = 0;
+	neuron->value = 0;
+	neuron->n_parents = 0;
+	neuron->n_children = 0;
+	neuron->role = 0;
+	free(neuron);
+
+	NEURON_NUMBER--;
+}
+
+void delete_layer(NS_LAYER* layer)
+{
+	for (uint64_t i = 0; i < layer->size; ++i)
+		delete_neuron(layer->elements[i]);
+}
+
+void delete_model(NS_MODEL* model)
+{
+	delete_layer(model_get_all_neurons(model));
 }

@@ -7,18 +7,17 @@
 
 //typedef thrd_t thread;
 
-typedef uint8_t NS_FLAG;
+typedef uint32_t NS_FLAG;
 
 enum NS_NEURON_FLAGS
 {
-	// ROLE_HIDDEN if neither input or output
-	
 	// should never be set in a working neural network
 	ERROR,
-	ROLE_INPUT = 0b0001,
+	ROLE_INPUT	= 0b0001,
 	ROLE_OUTPUT = 0b0010,
+	ROLE_HIDDEN	= 0b0100,
 	// if its value has been computed at least once
-	LIT_STATE = 0b0100
+	LIT_STATE	= 0b1000
 };
 
 typedef struct NS_ARRAY
@@ -38,6 +37,7 @@ typedef NS_ARRAY NS_MODEL_ARRAY;
 typedef double* NS_VALUES_ARRAY;
 typedef NS_ARRAY NS_TARGETS_ARRAY;
 
+typedef NS_NEURON_ARRAY NS_LAYER;
 // appends an element on an array of pointers and returns the new array
 // WARNING: can destroy the old array if there's not enough free space to add an element
 void* array_append(void** array, uint64_t array_size, void* element);
