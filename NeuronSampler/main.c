@@ -11,6 +11,11 @@
 - Multithreading
 - GPU support
 
+FIX
+
+- Problem with freeing neuron with id 14 in first instanciation, check why this can happen
+- layer_add_current_neurons has a hard time retrieving all the neurons without error
+
 */
 
 NS_MODEL* example_model()

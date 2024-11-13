@@ -11,6 +11,7 @@ static uint64_t NEURON_NUMBER = 1;
 struct NS_NEURON;
 struct NS_SYNAPSE;
 
+typedef uint32_t numerator;
 
 typedef struct NS_SYNAPSE
 {
@@ -28,8 +29,8 @@ typedef struct NS_SYNAPSE
 
 typedef struct NS_NEURON
 {
-	uint32_t n_parents;
-	uint32_t n_children;
+	numerator n_parents;
+	numerator n_children;
 	NS_SYNAPSE** parents;
 	NS_SYNAPSE** children;
 	double (*function)(double); // activation function
@@ -47,7 +48,7 @@ typedef struct NS_NEURON
 // "Given this input, I want this output".
 typedef struct NS_TARGET
 {
-	uint32_t n_inputs, n_outputs;
+	numerator n_inputs, n_outputs;
 	double* inputs;
 	double* outputs;
 } NS_TARGET;
@@ -58,8 +59,8 @@ typedef struct NS_MODEL
 	// model's input neurons
 	NS_NEURON** input_neurons;
 	NS_NEURON** output_neurons;
-	uint32_t n_input_neurons;
-	uint32_t n_output_neurons;
+	numerator n_input_neurons;
+	numerator n_output_neurons;
 } NS_MODEL;
 
 // creates a new synapse between two neurons (binds them automatically)

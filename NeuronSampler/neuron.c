@@ -215,9 +215,9 @@ NS_SYNAPSE* deserialize_synapse(char* buffer)
 char* serialize_model(NS_MODEL* model)
 {
 	NS_LAYER* neurons = model_get_all_neurons(model);
-	char* buffer = calloc(1, 
+	char* buffer = calloc(1,
 		// number of input and output neurons
-		sizeof(model->n_input_neurons) * 2 + 
+		sizeof(numerator) * 2 + 
 		// total number of neurons serialized after the model declaration
 		sizeof(uint64_t) +
 		// for all neurons in this model
@@ -227,12 +227,12 @@ char* serialize_model(NS_MODEL* model)
 		return 0;
 	// reading caret
 	size_t caret = 0;
-	memcpy(buffer, model->n_input_neurons, sizeof(model->n_input_neurons));
-	caret += sizeof(model->n_input_neurons);
-	memcpy(buffer + caret, model->n_output_neurons, sizeof(model->n_output_neurons));
-	caret += sizeof(model->n_output_neurons);
+	memcpy(buffer, &model->n_input_neurons, sizeof(numerator));
+	caret += sizeof(numerator);
+	memcpy(buffer + caret, &model->n_output_neurons, sizeof(numerator));
+	caret += sizeof(numerator);
 	// number of serialized neurons
-	memcpy(buffer + caret, neurons->size, sizeof(model->n_output_neurons));
+	memcpy(buffer + caret, &neurons->size, sizeof(numerator));
 	caret += sizeof(uint64_t);
 	for (uint64_t i = 0; i < neurons->size; ++i)
 	{
@@ -250,10 +250,10 @@ NS_MODEL* deserialize_model(char* buffer)
 	// reading caret in buffer
 	uint64_t n_neurons = 0;
 	size_t caret = 0;
-	memcpy(model->n_input_neurons, buffer + caret, sizeof(model->n_input_neurons));
-	caret += sizeof(model->n_input_neurons);
-	memcpy(model->n_output_neurons, buffer + caret, sizeof(model->n_output_neurons));
-	caret += sizeof(model->n_output_neurons);
+	memcpy(&model->n_input_neurons, buffer + caret, sizeof(numerator));
+	caret += sizeof(numerator);
+	memcpy(&model->n_output_neurons, buffer + caret, sizeof(numerator));
+	caret += sizeof(numerator);
 	memcpy(&n_neurons, buffer + caret, sizeof(uint64_t));
 	caret += sizeof(uint64_t);
 	NS_LAYER* neurons = ns_array_create();
@@ -306,9 +306,9 @@ void model_feed_values(NS_MODEL* model, NS_TARGET* target)
 void layer_add_current_neurons(NS_LAYER* layer, NS_NEURON* neuron)
 {
 	ns_array_append_no_duplicate(layer, neuron);
-	if (!neuron->role & ROLE_OUTPUT)
+	if (!(neuron->role & ROLE_OUTPUT))
 		for (uint64_t i = 0; i < neuron->n_children; ++i)
-			layer_add_current_neurons(layer, neuron->children[i]);
+			layer_add_current_neurons(layer, neuron->children[i]->child);
 	else
 		ns_array_append_no_duplicate(layer, neuron);
 }
