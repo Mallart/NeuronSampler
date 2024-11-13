@@ -28,8 +28,8 @@ typedef struct NS_SYNAPSE
 
 typedef struct NS_NEURON
 {
-	uint64_t n_parents;
-	uint64_t n_children;
+	uint32_t n_parents;
+	uint32_t n_children;
 	NS_SYNAPSE** parents;
 	NS_SYNAPSE** children;
 	double (*function)(double); // activation function
@@ -38,16 +38,16 @@ typedef struct NS_NEURON
 	double value;
 	double bias;
 	double delta;
-	NS_FLAG role;
 	// temporary and will be removed in a future version
 	uint64_t id;
+	NS_FLAG role;
 } NS_NEURON;
 
 // target version of model for a neural network.
 // "Given this input, I want this output".
 typedef struct NS_TARGET
 {
-	uint64_t n_inputs, n_outputs;
+	uint32_t n_inputs, n_outputs;
 	double* inputs;
 	double* outputs;
 } NS_TARGET;
@@ -58,8 +58,8 @@ typedef struct NS_MODEL
 	// model's input neurons
 	NS_NEURON** input_neurons;
 	NS_NEURON** output_neurons;
-	uint64_t n_input_neurons;
-	uint64_t n_output_neurons;
+	uint32_t n_input_neurons;
+	uint32_t n_output_neurons;
 } NS_MODEL;
 
 // creates a new synapse between two neurons (binds them automatically)
@@ -85,9 +85,6 @@ void bulk_bind_layers(NS_NEURON** parent_layer, uint64_t n_parent_layer_neurons,
 // sets the activation function of an array of neurons
 void layer_set_function(float (*function)(float), NS_NEURON** layer, uint64_t n_neurons);
 
-char* serialize_neuron(NS_NEURON* neuron);
-NS_NEURON* deserialize_neuron(char* buffer);
-
 // will replace all input values with the given ones.
 // prepares the model to be trained.
 void model_feed_values(NS_MODEL* model, NS_TARGET* target);
@@ -99,3 +96,15 @@ void delete_synapse(NS_SYNAPSE* synapse);
 void delete_neuron(NS_NEURON* neuron);
 void delete_layer(NS_LAYER* layer);
 void delete_model(NS_MODEL* model);
+
+#pragma region SERIALIZATION
+
+char* serialize_neuron(NS_NEURON* neuron);
+NS_NEURON* deserialize_neuron(char* buffer);
+
+char* serialize_synpase(NS_SYNAPSE* synapse);
+NS_SYNAPSE* deserialize_synapse(char* buffer);
+
+char* serialize_model(NS_MODEL* model);
+NS_MODEL* deserialize_model(char* buffer);
+#pragma endregion

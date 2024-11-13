@@ -43,7 +43,7 @@ bool array_exists(void** array, uint64_t array_size, void* element)
 	if (!array)
 		return false;
 	for (uint64_t i = 0; i < array_size; ++i)
-		if ((void*)(array + i) && array[i] == element)
+		if (array[i] && array[i] == element)
 			return true;
 	return false;
 }

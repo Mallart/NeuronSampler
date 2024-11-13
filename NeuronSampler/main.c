@@ -7,6 +7,7 @@
 
 - Serialization / deserialization
 - Finishing training (implementing backpropagation compared to an ideal model NS_TARGET)
+- Mass training using several targets (dataset)
 - Multithreading
 - GPU support
 
@@ -64,10 +65,24 @@ NS_TARGET example_target()
 	return target;
 }
 
+
+void serialization_test()
+{
+	NS_TARGET target = example_target();
+	NS_MODEL* model = example_model();
+	model_feed_values(model, &target);
+	//train_model(model, &target, 10000, .003);
+	char* buffer = serialize_model(model);
+	NS_MODEL* copy = deserialize_model(buffer);
+}
+
 void test()
 {
-	clock_t model_creation = benchmark(example_model);
+	// since I freed the model from memory, some uncanny crashes occur... funny haha
+	clock_t model_creation = benchmark_model_creation(example_model);
 	printf("Model creation time (ms): %i\n", model_creation);
+	clock_t serialization_time = benchmark(serialization_test);
+	printf("Model serialization time (ms): %i\n", serialization_time);
 	NS_MODEL* test_model = example_model();
 	double
 		t_inputs[] =
@@ -89,12 +104,20 @@ void test()
 	// it appears that the model's output neuron is freed near here for an unkown reason. 
 	// That's why the program crashes.
 	clock_t training = benchmark_training(train_model, test_model, &target, 100000, .001);
-	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f", 
+	NS_NEURON* _output = test_model->output_neurons[0];
+	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f\n", 
 		training, 
-		test_model->output_neurons[0]->value,
-		test_model->output_neurons[0]->bias,
-		test_model->output_neurons[0]->parents[0]->weight
+		_output->value,
+		_output->bias,
+		_output->parents[0]->weight
 	);
+
+	/*
+	double _inputs[] = { 3, 5 };
+	test_model->output_neurons[0] = _output;
+	model_query(test_model, &(NS_TARGET){.inputs = _inputs, CONST_ARRAY_SIZE(double, _inputs)});
+	printf("\nResult of 3 + 5: %f", test_model->output_neurons[0]->value);
+	*/
 }
 #endif
 

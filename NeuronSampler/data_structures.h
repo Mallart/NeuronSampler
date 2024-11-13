@@ -37,6 +37,9 @@ typedef NS_ARRAY NS_MODEL_ARRAY;
 typedef double* NS_VALUES_ARRAY;
 typedef NS_ARRAY NS_TARGETS_ARRAY;
 
+// array of targets
+typedef NS_ARRAY NS_DATASET;
+
 typedef NS_NEURON_ARRAY NS_LAYER;
 // appends an element on an array of pointers and returns the new array
 // WARNING: can destroy the old array if there's not enough free space to add an element

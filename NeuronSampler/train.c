@@ -13,6 +13,21 @@ void train_model(NS_MODEL* model, NS_TARGET* target, uint64_t epoch, double prec
 		}
 }
 
+void mass_train_model(NS_MODEL* model, NS_DATASET* dataset, uint64_t epoch, double learning_rate)
+{
+	for (int i = 0; i < dataset->size; ++i)
+		train_model(model, dataset->elements[i], epoch, learning_rate);
+}
+
+void model_query(NS_MODEL* model, NS_TARGET* input)
+{
+	model_feed_values(model, input);
+	int n_neurons = model->n_output_neurons;
+	for (int _out = 0; _out < n_neurons; ++_out)
+		neuron_forward(model->output_neurons[_out]);
+
+}
+
 void save_model_state(NS_MODEL* model, FILE* stream)
 {
 	if (!stream)
@@ -46,12 +61,12 @@ clock_t benchmark_training(void (*training)(NS_MODEL*, NS_TARGET*, uint64_t), NS
 	return end - start;
 }
 
-clock_t benchmark_model_creation(NS_MODEL*(*model_creation_function)(NS_MODEL*, NS_TARGET*, uint64_t), NS_MODEL* nsm, NS_TARGET* nst, uint64_t epoch)
+clock_t benchmark_model_creation(NS_MODEL*(*model_creation_function)(void))
 {
 	clock_t
 		start = clock(),
 		end;
-	NS_MODEL* _model = model_creation_function(nsm, nst, epoch);
+	NS_MODEL* _model = model_creation_function();
 	end = clock();
 	delete_model(_model);
 	return end - start;

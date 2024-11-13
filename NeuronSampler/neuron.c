@@ -14,13 +14,13 @@ NS_SYNAPSE* create_synapse(NS_NEURON* parent, NS_NEURON* child)
 	if (child && !(child->role & ROLE_INPUT | child->role & ROLE_OUTPUT | child->role & ROLE_HIDDEN))
 		child->role = ROLE_HIDDEN;
 	synapse->weight = fmod(((double)rand()) / 1000000, 1.f);
-	
+
 	if (parent && !array_exists(parent->children, parent->n_children, child))
 	{
 		parent->children = array_append(parent->children, parent->n_children, synapse);
 		parent->n_children++;
 	}
-	
+
 	if (child && !array_exists(child->parents, child->n_parents, parent))
 	{
 		child->parents = array_append(child->parents, child->n_parents, synapse);
@@ -40,7 +40,7 @@ void destroy_synapse(NS_SYNAPSE* synapse)
 		array_remove(parent->children, parent->n_children, synapse);
 		parent->n_children--;
 	}
-	
+
 	if (!array_exists(child->parents, child->n_parents, parent))
 	{
 		array_remove(child->parents, child->n_parents, synapse);
@@ -94,9 +94,9 @@ NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input, NS_NEURON** 
 
 void init_neuron(NS_NEURON* neuron)
 {
-	if(neuron->parents)
+	if (neuron->parents)
 		free(neuron->parents);
-	if(neuron->children)
+	if (neuron->children)
 		free(neuron->children);
 	neuron->parents = malloc(sizeof(NS_SYNAPSE**));
 	neuron->children = malloc(sizeof(NS_SYNAPSE**));
@@ -122,7 +122,7 @@ double neuron_forward(NS_NEURON* neuron)
 	for (uint64_t i = 0; i < neuron->n_parents; ++i)
 		if (neuron->parents[i]->parent && neuron->parents[i]->parent->value)
 			inputs += neuron->parents[i]->parent->value * neuron->parents[i]->weight;
-		else if(neuron->parents[i]->parent)
+		else if (neuron->parents[i]->parent)
 			inputs += neuron_forward(neuron->parents[i]->parent) * neuron->parents[i]->weight;
 	double _val = neuron->function(inputs + neuron->bias);
 	neuron->value = _val;
@@ -135,7 +135,7 @@ void neuron_backwards(NS_NEURON* neuron, double target, double learning_rate)
 		return;
 	// it's not an input neuron
 	double error = 0;
-	if(neuron->role & ROLE_OUTPUT)
+	if (neuron->role & ROLE_OUTPUT)
 		error = neuron->value - target;
 	else
 	{
@@ -178,12 +178,114 @@ void layer_set_function(float (*function)(float), NS_NEURON** layer, uint64_t n_
 
 char* serialize_neuron(NS_NEURON* neuron)
 {
-	return 0;
+	char* buffer = calloc(1, sizeof(NS_NEURON));
+	if (!buffer)
+		return 0;
+	memcpy(buffer, neuron, sizeof(NS_NEURON));
+	return buffer;
 }
 
 NS_NEURON* deserialize_neuron(char* buffer)
 {
-	return 0;
+	NS_NEURON* neuron = calloc(1, sizeof(NS_NEURON));
+	if (!neuron)
+		return 0;
+	memcpy(neuron, buffer, sizeof(NS_NEURON));
+	return neuron;
+}
+
+char* serialize_synpase(NS_SYNAPSE* synapse)
+{
+	char* buffer = calloc(1, sizeof(NS_SYNAPSE));
+	if (!buffer)
+		return 0;
+	memcpy(buffer, synapse, sizeof(NS_SYNAPSE));
+	return buffer;
+}
+
+NS_SYNAPSE* deserialize_synapse(char* buffer)
+{
+	NS_SYNAPSE* synapse = calloc(1, sizeof(NS_SYNAPSE));
+	if (!synapse)
+		return 0;
+	memcpy(synapse, buffer, sizeof(NS_SYNAPSE));
+	return synapse;
+}
+
+char* serialize_model(NS_MODEL* model)
+{
+	NS_LAYER* neurons = model_get_all_neurons(model);
+	char* buffer = calloc(1, 
+		// number of input and output neurons
+		sizeof(model->n_input_neurons) * 2 + 
+		// total number of neurons serialized after the model declaration
+		sizeof(uint64_t) +
+		// for all neurons in this model
+		sizeof(NS_NEURON) * neurons->size
+	);
+	if (!buffer)
+		return 0;
+	// reading caret
+	size_t caret = 0;
+	memcpy(buffer, model->n_input_neurons, sizeof(model->n_input_neurons));
+	caret += sizeof(model->n_input_neurons);
+	memcpy(buffer + caret, model->n_output_neurons, sizeof(model->n_output_neurons));
+	caret += sizeof(model->n_output_neurons);
+	// number of serialized neurons
+	memcpy(buffer + caret, neurons->size, sizeof(model->n_output_neurons));
+	caret += sizeof(uint64_t);
+	for (uint64_t i = 0; i < neurons->size; ++i)
+	{
+		memcpy(buffer + caret, serialize_neuron(neurons->elements[i]), sizeof(NS_NEURON));
+		caret += sizeof(NS_NEURON);
+	}
+	return buffer;
+}
+
+NS_MODEL* deserialize_model(char* buffer)
+{
+	NS_MODEL* model = calloc(1, sizeof(NS_MODEL));
+	if (!model)
+		return 0;
+	// reading caret in buffer
+	uint64_t n_neurons = 0;
+	size_t caret = 0;
+	memcpy(model->n_input_neurons, buffer + caret, sizeof(model->n_input_neurons));
+	caret += sizeof(model->n_input_neurons);
+	memcpy(model->n_output_neurons, buffer + caret, sizeof(model->n_output_neurons));
+	caret += sizeof(model->n_output_neurons);
+	memcpy(&n_neurons, buffer + caret, sizeof(uint64_t));
+	caret += sizeof(uint64_t);
+	NS_LAYER* neurons = ns_array_create();
+	for (uint64_t i = 0; i < n_neurons; ++i)
+	{
+		char* neuron_buffer = calloc(1, sizeof(NS_NEURON));
+		if (!neuron_buffer)
+			return 0;
+		memcpy(neuron_buffer, buffer, sizeof(NS_NEURON));
+		ns_array_append(neurons, deserialize_neuron(neuron_buffer));
+		free(neuron_buffer);
+	}
+	NS_LAYER* input_layer	= ns_array_create();
+	NS_LAYER* hidden_layer	= ns_array_create();
+	NS_LAYER* output_layer	= ns_array_create();
+	for (uint64_t i = 0; i < n_neurons; ++i)
+	{
+		NS_NEURON* _neuron = neurons->elements[i];
+		if (_neuron->role & ROLE_INPUT)
+			ns_array_append(input_layer, _neuron);
+		else if (_neuron->role & ROLE_OUTPUT)
+			ns_array_append(output_layer, _neuron);
+		else
+			ns_array_append(hidden_layer, _neuron);
+	}
+	NS_MODEL* final = create_model(input_layer->elements, input_layer->size, output_layer->elements, output_layer->size);
+	free(input_layer);
+	free(hidden_layer);
+	free(output_layer);
+	free(neurons);
+	free(model);
+	return final;
 }
 
 void model_feed_values(NS_MODEL* model, NS_TARGET* target)
@@ -213,7 +315,7 @@ void layer_add_current_neurons(NS_LAYER* layer, NS_NEURON* neuron)
 
 NS_LAYER* model_get_all_neurons(NS_MODEL* model)
 {
-	NS_LAYER* layer = malloc(sizeof(NS_LAYER));
+	NS_LAYER* layer = ns_array_create();
 	for (uint64_t i = 0; i < model->n_input_neurons; ++i)
 		layer_add_current_neurons(layer, model->input_neurons[i]);
 	return layer;
@@ -225,19 +327,21 @@ void delete_synapse(NS_SYNAPSE* synapse)
 		return;
 	synapse->input_value = 0;
 	// sets a free space in array for both parent and child neurons
-	for (uint64_t i = 0; i < synapse->parent->n_children; ++i)
-		if (synapse->parent->children[i] == synapse)
-		{
-			synapse->parent->children[i] = 0;
-			synapse->parent->n_children--;
-		}
+	if (synapse->parent)
+		for (uint64_t i = 0; i < synapse->parent->n_children; ++i)
+			if (synapse->parent->children[i] == synapse)
+			{
+				synapse->parent->children[i] = 0;
+				synapse->parent->n_children--;
+			}
 	synapse->parent = 0;
-	for (uint64_t i = 0; i < synapse->child->n_parents; ++i)
-		if (synapse->child->parents[i] == synapse)
-		{
-			synapse->child->parents[i] = 0;
-			synapse->child->n_parents--;
-		}
+	if (synapse->child)
+		for (uint64_t i = 0; i < synapse->child->n_parents; ++i)
+			if (synapse->child->parents[i] == synapse)
+			{
+				synapse->child->parents[i] = 0;
+				synapse->child->n_parents--;
+			}
 	synapse->child = 0;
 	synapse->weight = 0;
 	free(synapse);
@@ -247,8 +351,9 @@ void delete_neuron(NS_NEURON* neuron)
 {
 	if (!neuron)
 		return;
-	for (uint64_t i = 0; i < neuron->n_parents; ++i)
-		delete_synapse(neuron->parents[i]);
+	if (!(neuron->role & ROLE_INPUT))
+		for (uint64_t i = 0; i < neuron->n_parents; ++i)
+			delete_synapse(neuron->parents[i]);
 	for (uint64_t i = 0; i < neuron->n_children; ++i)
 		delete_synapse(neuron->children[i]);
 	neuron->bias = 0;
