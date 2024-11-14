@@ -31,7 +31,7 @@ void model_query(NS_MODEL* model, NS_TARGET* input)
 void save_model_state(NS_MODEL* model, FILE* stream)
 {
 	if (!stream)
-		return 0;
+		return;
 }
 
 NS_MODEL* read_model_state(FILE* stream)
@@ -46,12 +46,13 @@ clock_t benchmark(void* (*f)(void))
 		start = clock(),
 		end;
 	void* ret = f();
-	free(ret);
+	if(ret)
+		free(ret);
 	end = clock();
 	return end - start;
 }
 
-clock_t benchmark_training(void (*training)(NS_MODEL*, NS_TARGET*, uint64_t), NS_MODEL* nsm, NS_TARGET* nst, uint64_t epoch, double learning_rate)
+clock_t benchmark_training(void (*training)(NS_MODEL*, NS_TARGET*, uint64_t, double), NS_MODEL* nsm, NS_TARGET* nst, uint64_t epoch, double learning_rate)
 {
 	clock_t
 		start = clock(),
@@ -67,7 +68,9 @@ clock_t benchmark_model_creation(NS_MODEL*(*model_creation_function)(void))
 		start = clock(),
 		end;
 	NS_MODEL* _model = model_creation_function();
+	debug("Finished model creation execution\n");
 	end = clock();
 	delete_model(_model);
+	debug("Deleted model \n");
 	return end - start;
 }

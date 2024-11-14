@@ -1,6 +1,6 @@
 #pragma once
 #include "data_structures.h"
-#include "neuron_functions.h";
+#include "neuron_functions.h"
 // returns the size of a const neuron array (layer).
 // caution: doesn't work with dynamically created layers.
 #define CONST_LAYER_SIZE(layer) CONST_ARRAY_SIZE(NS_NEURON*, layer)
@@ -84,7 +84,7 @@ void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs);
 // binds two layers, connecting every single neuron from layer2 to every single neuron of layer2.
 void bulk_bind_layers(NS_NEURON** parent_layer, uint64_t n_parent_layer_neurons, NS_NEURON** child_layer, uint64_t n_child_layer_neurons);
 // sets the activation function of an array of neurons
-void layer_set_function(float (*function)(float), NS_NEURON** layer, uint64_t n_neurons);
+void layer_set_function(double (*function)(double), NS_NEURON** layer, uint64_t n_neurons);
 
 // will replace all input values with the given ones.
 // prepares the model to be trained.

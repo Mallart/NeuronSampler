@@ -6,6 +6,16 @@
 #define CONST_ARRAY_SIZE(type, array) sizeof(array) / sizeof(type)
 #define NS_EPSILON .0000000001
 //typedef thrd_t thread;
+#define DEBUG
+
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+
+#ifdef DEBUG
+#define debug(msg) printf(msg)
+#else
+#define debug(msg)
+#endif
 
 typedef uint32_t NS_FLAG;
 
@@ -44,11 +54,15 @@ typedef NS_NEURON_ARRAY NS_LAYER;
 // appends an element on an array of pointers and returns the new array
 // WARNING: can destroy the old array if there's not enough free space to add an element
 void* array_append(void** array, uint64_t array_size, void* element);
+#define s_array_append(array, array_size, element) array_append((void**)array, array_size, (void*)element)
 void* array_append_no_duplicate(void** array, uint64_t array_size, void* element);
+#define s_array_append_no_duplicate(array, array_size, element) array_append_no_duplicate((void**)array, array_size, (void*)element)
 // replaces an element with 0.
 void array_remove(void** array, uint64_t array_size, void* element);
+#define s_array_remove(array, array_size, element) array_remove((void**)array, array_size, (void*)element)
 // returns true if the specified element exist in array
 bool array_exists(void** array, uint64_t array_size, void* element);
+#define s_array_exists(array, array_size, element) array_exists((void**)array, array_size, (void*)element)
 void** array_create_from_ns_array(NS_ARRAY* array);
 
 NS_ARRAY* ns_array_create();
@@ -57,6 +71,7 @@ NS_ARRAY* ns_array_create();
 NS_ARRAY* ns_array_append(NS_ARRAY* array, void* element);
 NS_ARRAY* ns_array_append_no_duplicate(NS_ARRAY* array, void* element);
 NS_ARRAY* ns_array_create_from_buffer(void** array, uint64_t size);
+#define s_ns_array_create_from_buffer(array, array_size) ns_array_create_from_buffer((void**)array, array_size)
 // replaces an element with 0.
 void ns_array_remove(NS_ARRAY* array, void* element);
 // returns true if the specified element exist in array
