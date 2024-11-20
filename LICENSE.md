@@ -19,9 +19,11 @@ Under the following terms:
     and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
   In any derivative of this project, you shall include this original licensing file.
 - NonCommercial — You may not use the material for commercial purposes.
-    No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
 - No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
 No warranties: The material is provided "as is," without any warranties of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement.
+### User Responsibility:
+
+**You**, as a user or developer using this project, remain responsible for the use and changes you make to this project and their consequences.
 
 ### Exemption for the Creator:
 
