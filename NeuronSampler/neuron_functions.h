@@ -9,17 +9,20 @@ double relu(double x);
 double sigmoid(double x);
 // returns the raw value of this neuron (no edition)
 double raw(double x);
+bool heaviside(double x);
 
 static const double (*NEURON_FUNCTIONS[])(double) = 
 { 
     relu, 
     sigmoid, 
-    raw 
+    raw,
+    heaviside,
 }; 
 enum NEURON_ACTIVATION_FUNCTIONS {
     RELU, 
     SIGMOID, 
     RAW,
+    HEAVISIDE,
 };
 
 #pragma endregion For everything related to the forward pass / propagation of results

@@ -12,9 +12,11 @@
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
 #ifdef DEBUG
-#define debug(msg) printf(msg)
+#define debug(msg, ...) printf(msg, __VA_ARGS__)
+#define mdebug(msg) printf(msg)
 #else
-#define debug(msg)
+#define debug(msg, ...)
+#define mdebug(msg)
 #endif
 
 typedef uint32_t NS_FLAG;

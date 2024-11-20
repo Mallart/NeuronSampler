@@ -294,11 +294,14 @@ void model_feed_values(NS_MODEL* model, NS_TARGET* target)
 	// every variable seem corrupted atp
 	NS_NEURON* ns_output = model->output_neurons[0];
 	uint64_t n_values = min(model->n_input_neurons, target->n_inputs);
+	mdebug("Began feeding\n");
 	for (uint64_t i = 0; i < n_values; ++i)
 	{
+		debug("Setting input for neuron %i\n", i);
 		model->input_neurons[i]->role |= LIT_STATE;
 		model->input_neurons[i]->value = target->inputs[i];
 		model->input_neurons[i]->parents[0]->input_value = target->inputs[i];
+		debug("Finished input for neuron %i\n", i);
 	}
 	*model->output_neurons = ns_output;
 }

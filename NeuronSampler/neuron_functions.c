@@ -15,6 +15,11 @@ double raw(double x)
     return x;
 }
 
+bool heaviside(double x)
+{
+    return x >= 0.0;
+}
+
 double average_quadratic_error(uint64_t n_results, double* result, double* expected)
 {
     double _sum = 0;

@@ -68,9 +68,9 @@ clock_t benchmark_model_creation(NS_MODEL*(*model_creation_function)(void))
 		start = clock(),
 		end;
 	NS_MODEL* _model = model_creation_function();
-	debug("Finished model creation execution\n");
+	mdebug("Finished model creation execution\n");
 	end = clock();
 	delete_model(_model);
-	debug("Deleted model \n");
+	mdebug("Deleted model \n");
 	return end - start;
 }

@@ -100,12 +100,12 @@ void test()
 		.inputs = t_inputs,
 		.outputs = t_output
 	};
-	debug("Feeding values to model\n");
+	mdebug("Feeding values to model\n");
 	model_feed_values(test_model, &target);
-	debug("Fed values to model\n");
+	mdebug("Fed values to model\n");
 	// it appears that the model's output neuron is freed near here for an unkown reason. 
 	// That's why the program crashes.
-	debug("Began training\n");
+	mdebug("Began training\n");
 	clock_t training = benchmark_training(train_model, test_model, &target, 100000, .001);
 	NS_NEURON* _output = test_model->output_neurons[0];
 	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f\n", 

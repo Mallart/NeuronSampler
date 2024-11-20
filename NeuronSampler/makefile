@@ -1,7 +1,7 @@
 SOURCES=$(wildcard *.c)
 HEADERS=$(wildcard *.h)
 OBJECTS=$(wildcard *.o)
-CFLAGS=-w
+CFLAGS=-w -gdwarf-4 -g3 -g
 
 build:
 	gcc $(CFLAGS) -c $(SOURCES)
