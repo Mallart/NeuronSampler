@@ -7,7 +7,6 @@ You are responsible for what you do with this software development kit, how you 
 
 source:
 https://github.com/Mallart/NeuronSampler
-Creative Commons Attribution-NonCommercial 4.0 International Public License
 
 You are free to:
 
