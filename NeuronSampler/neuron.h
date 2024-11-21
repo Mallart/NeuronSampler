@@ -3,8 +3,10 @@
 #include "neuron_functions.h"
 // returns the size of a const neuron array (layer).
 // caution: doesn't work with dynamically created layers.
+#define NS_LAYER_SIZE(layer) ((NS_ARRAY*)layer)->size
 #define CONST_LAYER_SIZE(layer) CONST_ARRAY_SIZE(NS_NEURON*, layer)
 #define BIND_CONST_LAYERS(parent_layer, child_layer) bulk_bind_layers(parent_layer, sizeof(parent_layer) / sizeof(NS_NEURON*), child_layer, sizeof(child_layer) / sizeof(NS_NEURON*))
+#define BIND_NS_LAYERS(parent_layer, child_layer) bulk_bind_layers((NS_NEURON**)((NS_ARRAY*)parent_layer)->elements, NS_LAYER_SIZE(parent_layer), (NS_NEURON**)((NS_ARRAY*)child_layer)->elements, NS_LAYER_SIZE(child_layer))
 
 static uint64_t NEURON_NUMBER = 1;
 
@@ -87,6 +89,8 @@ void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs);
 void bulk_bind_layers(NS_NEURON** parent_layer, uint64_t n_parent_layer_neurons, NS_NEURON** child_layer, uint64_t n_child_layer_neurons);
 // sets the activation function of an array of neurons
 void layer_set_function(double (*function)(double), NS_NEURON** layer, uint64_t n_neurons);
+// sets the activation function of an ns_array of neurons
+void ns_layer_set_function(double (*function)(double), NS_LAYER* layer);
 
 // will replace all input values with the given ones.
 // prepares the model to be trained.

@@ -22,32 +22,39 @@ FIX
 NS_MODEL* example_model()
 {
 	// first, we create layers
-	NS_NEURON* input[]  = { create_neuron(), create_neuron() };
-	NS_NEURON* layer1[] = { create_neuron(), create_neuron(), create_neuron() };
-	NS_NEURON* layer2[] = { create_neuron(), create_neuron(), create_neuron() };
-	NS_NEURON* layer3[] = { create_neuron(), create_neuron(), create_neuron() };
-	NS_NEURON* layer4[] = { create_neuron(), create_neuron(), create_neuron() };
-	NS_NEURON* output[] = { create_neuron() };
+	NS_NEURON* _input[]  = { create_neuron(), create_neuron() };
+	NS_NEURON* _layer1[] = { create_neuron(), create_neuron(), create_neuron() };
+	NS_NEURON* _layer2[] = { create_neuron(), create_neuron(), create_neuron() };
+	NS_NEURON* _layer3[] = { create_neuron(), create_neuron(), create_neuron() };
+	NS_NEURON* _layer4[] = { create_neuron(), create_neuron(), create_neuron() };
+	NS_NEURON* _output[] = { create_neuron() };
+
+	NS_LAYER* input	 = s_ns_array_create_from_buffer(_input, CONST_LAYER_SIZE(_input));
+	NS_LAYER* layer1 = s_ns_array_create_from_buffer(_layer1, CONST_LAYER_SIZE(_layer1));
+	NS_LAYER* layer2 = s_ns_array_create_from_buffer(_layer2, CONST_LAYER_SIZE(_layer2));
+	NS_LAYER* layer3 = s_ns_array_create_from_buffer(_layer3, CONST_LAYER_SIZE(_layer3));
+	NS_LAYER* layer4 = s_ns_array_create_from_buffer(_layer4, CONST_LAYER_SIZE(_layer4));
+	NS_LAYER* output = s_ns_array_create_from_buffer(_output, CONST_LAYER_SIZE(_output));
 
 	// then, we choose an activation function for each neuron / layer
 
 	// this one (input) is automatically set to raw when we create the model
-	layer_set_function(&raw, input, CONST_LAYER_SIZE(input));
-	layer_set_function(&tanh, layer1, CONST_LAYER_SIZE(layer1));
-	layer_set_function(&tanh, layer2, CONST_LAYER_SIZE(layer2));
-	layer_set_function(&tanh, layer3, CONST_LAYER_SIZE(layer3));
-	layer_set_function(&tanh, layer4, CONST_LAYER_SIZE(layer4));
-	layer_set_function(&raw, output, CONST_LAYER_SIZE(output));
+	ns_layer_set_function(&raw, input);
+	ns_layer_set_function(&tanh, layer1);
+	ns_layer_set_function(&tanh, layer2);
+	ns_layer_set_function(&tanh, layer3);
+	ns_layer_set_function(&tanh, layer4);
+	ns_layer_set_function(&raw, output);
 	
 	// we have to bind layers together
-	BIND_CONST_LAYERS(input, layer1);
-	BIND_CONST_LAYERS(layer1, layer2);
-	BIND_CONST_LAYERS(layer2, layer3);
-	BIND_CONST_LAYERS(layer3, layer4);
-	BIND_CONST_LAYERS(layer4, output);
+	BIND_NS_LAYERS(input, layer1);
+	BIND_NS_LAYERS(layer1, layer2);
+	BIND_NS_LAYERS(layer2, layer3);
+	BIND_NS_LAYERS(layer3, layer4);
+	BIND_NS_LAYERS(layer4, output);
 
 	// then we create the model using the input layer
-	return create_model(input, CONST_LAYER_SIZE(input), output, CONST_LAYER_SIZE(output));
+	return create_model((NS_NEURON**)input->elements, NS_LAYER_SIZE(input), (NS_NEURON**)output->elements, NS_LAYER_SIZE(output));
 }
 
 NS_TARGET* example_target()

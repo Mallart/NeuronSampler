@@ -172,6 +172,12 @@ void layer_set_function(double (*function)(double), NS_NEURON** layer, uint64_t 
 		layer[i]->function = function;
 }
 
+void ns_layer_set_function(double (*function)(double), NS_LAYER* layer)
+{
+	for (uint64_t i = 0; i < layer->size; ++i)
+		((NS_NEURON*)layer->elements[i])->function = function;
+}
+
 char* serialize_neuron(NS_NEURON* neuron)
 {
 	char* buffer = calloc(1, sizeof(NS_NEURON));

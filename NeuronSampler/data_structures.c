@@ -68,6 +68,7 @@ NS_ARRAY* ns_array_append(NS_ARRAY* array, void* element)
 	{
 		array->elements = malloc(array->size * sizeof(element));
 		*array->elements = element;
+		array->size++;
 		return array;
 	}
 	uint64_t i = 0;
@@ -79,6 +80,7 @@ NS_ARRAY* ns_array_append(NS_ARRAY* array, void* element)
 	{
 		array->elements = realloc(array->elements, array->size + sizeof(element));
 		array->elements[array->size] = element;
+		array->size++;
 		return array;
 	}
 	// free space detected, put a pointer in it
