@@ -15,7 +15,7 @@ double raw(double x)
     return x;
 }
 
-bool heaviside(double x)
+double heaviside(double x)
 {
     return x >= 0.0;
 }

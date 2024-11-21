@@ -9,7 +9,7 @@ double relu(double x);
 double sigmoid(double x);
 // returns the raw value of this neuron (no edition)
 double raw(double x);
-bool heaviside(double x);
+double heaviside(double x);
 
 static const double (*NEURON_FUNCTIONS[])(double) = 
 { 

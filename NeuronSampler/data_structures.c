@@ -20,6 +20,7 @@ void* array_append(void** array, uint64_t array_size, void* element)
 		return array;
 	}
 	// free space detected, put a pointer in it
+	// WARNING: if the array is not initialized correctly, this could cause segmentation faults
 	array[i] = element;
 	return array;
 }
@@ -110,6 +111,13 @@ void ns_array_remove(NS_ARRAY* array, void* element)
 		if (array->elements[i] == element)
 			array->elements[i] = 0;
 }
+
+void ns_array_free(NS_ARRAY* array)
+{
+	array->size = 0;
+	free(array->elements);
+}
+
 
 bool ns_array_exists(NS_ARRAY* array, void* element)
 {

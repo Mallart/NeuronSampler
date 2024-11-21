@@ -29,10 +29,12 @@ typedef struct NS_SYNAPSE
 
 typedef struct NS_NEURON
 {
-	numerator n_parents;
-	numerator n_children;
-	NS_SYNAPSE** parents;
-	NS_SYNAPSE** children;
+	// numerator n_parents;
+	// numerator n_children;
+	// NS_SYNAPSE** parents;
+	// NS_SYNAPSE** children;
+	NS_SYNAPSE_ARRAY* parents;
+	NS_SYNAPSE_ARRAY* children;
 	double (*function)(double); // activation function
 	// value set only once, to avoid the neuron to recompute the same value several times
 	// hence reducing the stack size while processing huge models

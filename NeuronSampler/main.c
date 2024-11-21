@@ -47,7 +47,7 @@ NS_MODEL* example_model()
 	BIND_CONST_LAYERS(layer4, output);
 
 	// then we create the model using the input layer
-	return create_model((NS_NEURON**)input, CONST_LAYER_SIZE(input), (NS_NEURON**)output, CONST_LAYER_SIZE(output));
+	return create_model(input, CONST_LAYER_SIZE(input), output, CONST_LAYER_SIZE(output));
 }
 
 NS_TARGET* example_target()
@@ -82,7 +82,6 @@ void* serialization_test()
 
 void test()
 {
-	printf("Starting NeuronSampler\n");
 	NS_MODEL* test_model = example_model();
 	double
 		t_inputs[] =
@@ -100,7 +99,11 @@ void test()
 		.inputs = t_inputs,
 		.outputs = t_output
 	};
+	int u;
+	debug("\nTarget ptr: %p ; u ptr: %p\n", &target.inputs[0], &u);
+	// debug("%s", ((&u & 1) ? "Ok something really bad is going on" : "No memory trashing detected"));
 	mdebug("Feeding values to model\n");
+	debug("Target p: %p\n", &target);
 	model_feed_values(test_model, &target);
 	mdebug("Fed values to model\n");
 	// it appears that the model's output neuron is freed near here for an unkown reason. 
@@ -112,7 +115,7 @@ void test()
 		training, 
 		_output->value,
 		_output->bias,
-		_output->parents[0]->weight
+		((NS_SYNAPSE*)_output->parents->elements[0])->weight
 	);
 
 	clock_t serialization_time = benchmark(serialization_test);
