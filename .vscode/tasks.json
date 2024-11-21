@@ -1,6 +1,17 @@
 {
     "tasks": [
         {
+            "label": "C Make",
+            "type": "shell",
+            "command": "make",
+            "args": [],
+            "options": {"cwd": "${workspaceFolder}/NeuronSampler"},
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
             "type": "cppbuild",
             "label": "C/C++: gcc.exe build active file",
             "command": "C:/gcc/mingw64/bin/gcc.exe",
