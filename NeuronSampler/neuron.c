@@ -24,7 +24,7 @@ NS_SYNAPSE* create_synapse(NS_NEURON* parent, NS_NEURON* child)
 	{
 		synapse->child->parents = ns_array_append(child->parents, synapse);
 	}
-	debug("-- Synapse\nParent address: %p\nChild Address: %p\n", synapse->parent, synapse->child);
+	// debug("-- Synapse\nParent address: %p\nChild Address: %p\n", synapse->parent, synapse->child);
 	return synapse;
 }
 
@@ -48,37 +48,38 @@ NS_NEURON* create_neuron()
 	if (!neuron)
 		return 0;
 	init_neuron(neuron);
-	debug("-- Neuron\nCreated and initialized neuron at %p\n", neuron);
+	// debug("-- Neuron\nCreated and initialized neuron at %p\n", neuron);
 	return neuron;
 }
 
-NS_NEURON** create_layer(uint64_t n)
+NS_LAYER* create_layer(uint64_t n)
 {
-	NS_NEURON** neurons = calloc(n, sizeof(NS_NEURON*));
+	NS_LAYER* neurons = ns_array_create();
 	if (!neurons)
 		return 0;
 	for (uint64_t i = 0; i < n; ++i)
-		neurons[i] = create_neuron();
+		ns_array_append(neurons, create_neuron());
 	return neurons;
 }
 
-NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input, NS_NEURON** output, uint64_t n_output)
+NS_MODEL* create_model(NS_NEURON** input, const uint64_t n_input, NS_NEURON** output, const uint64_t n_output)
 {
 	NS_MODEL* model = malloc(sizeof(NS_MODEL));
 	if (
 		!model ||
-		!input_neurons ||
+		!input ||
 		!output
 		)
 		return 0;
 	model->n_input_neurons = n_input;
-	model->input_neurons = input_neurons;
+	model->input_neurons = input;
 	model->output_neurons = output;
 	model->n_output_neurons = n_output;
 	for (uint64_t i = 0; i < n_input; ++i)
 	{
 		// no parent means it's an input neuron
-		create_synapse(0, model->input_neurons[i]);
+		NS_SYNAPSE* _synapse = create_synapse(0, model->input_neurons[i]);
+		_synapse->child->parents->elements[0] = _synapse;
 		model->input_neurons[i]->role |= ROLE_INPUT;
 
 	}
@@ -196,7 +197,7 @@ NS_NEURON* deserialize_neuron(char* buffer)
 	return neuron;
 }
 
-char* serialize_synpase(NS_SYNAPSE* synapse)
+char* serialize_synapse(NS_SYNAPSE* synapse)
 {
 	char* buffer = calloc(1, sizeof(NS_SYNAPSE));
 	if (!buffer)
@@ -296,20 +297,11 @@ void model_feed_values(NS_MODEL* model, NS_TARGET* target)
 	// every variable seem corrupted atp
 	NS_NEURON* ns_output = model->output_neurons[0];
 	uint64_t n_values = min(model->n_input_neurons, target->n_inputs);
-	mdebug("Began feeding\n");
 	for (uint64_t i = 0; i < n_values; ++i)
 	{
-		debug("Setting input for neuron %i\n", i);
-		debug("Neuron address: %p\n", model->input_neurons[i]);
-		debug("model address: %p\n", model);
-		debug("Target address: %p\n", target);
-		debug("Target input address: %p\n", &(target->inputs[i]));
-		debug("Parents address: %p\n", model->input_neurons[i]->parents);
-		debug("First parent address: %p\n", model->input_neurons[i]->parents[0]);
 		model->input_neurons[i]->role |= LIT_STATE;
 		model->input_neurons[i]->value = target->inputs[i];
 		((NS_SYNAPSE*)model->input_neurons[i]->parents->elements[0])->input_value = target->inputs[i];
-		debug("Finished input for neuron %i\n", i);
 	}
 	*model->output_neurons = ns_output;
 }
@@ -334,19 +326,16 @@ NS_LAYER* model_get_all_neurons(NS_MODEL* model)
 
 void delete_synapse(NS_SYNAPSE* synapse)
 {
+
 	if (!synapse)
 		return;
 	synapse->input_value = 0;
 	// sets a free space in array for both parent and child neurons
 	if (synapse->parent)
-		for (uint64_t i = 0; i < synapse->parent->children->size; ++i)
-			if (((NS_SYNAPSE*)synapse->parent->children->elements[i]) == synapse)
-				ns_array_remove(synapse->parent->children, synapse);
+		ns_array_remove(synapse->parent->children, synapse);
 	synapse->parent = 0;
 	if (synapse->child)
-		for (uint64_t i = 0; i < synapse->child->parents->elements; ++i)
-			if (((NS_SYNAPSE*)synapse->child->parents->elements[i]) == synapse)
-				ns_array_remove(synapse->child->parents, synapse);
+		ns_array_remove(synapse->child->parents, synapse);
 	synapse->child = 0;
 	synapse->weight = 0;
 	free(synapse);

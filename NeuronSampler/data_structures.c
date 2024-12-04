@@ -64,9 +64,11 @@ NS_ARRAY* ns_array_create()
 
 NS_ARRAY* ns_array_append(NS_ARRAY* array, void* element)
 {
+	if (!array)
+		return ns_array_create();
 	if (!array->elements)
 	{
-		array->elements = malloc(array->size * sizeof(element));
+		array->elements = malloc((array->size + 1) * sizeof(element));
 		*array->elements = element;
 		array->size++;
 		return array;
@@ -76,9 +78,15 @@ NS_ARRAY* ns_array_append(NS_ARRAY* array, void* element)
 		if (!array->elements[i])
 			break;
 	// full array, have to realloc
-	if (i == array->size - 1)
+	if (i > array->size - 1)
 	{
-		array->elements = realloc(array->elements, array->size + sizeof(element));
+		void** temp_arr = realloc(array->elements, (array->size + 1) * sizeof(element));
+		if(temp_arr)
+			array->elements = temp_arr;
+		else {
+			mdebug("Realloc failed");
+			exit(-1);
+		}
 		array->elements[array->size] = element;
 		array->size++;
 		return array;
@@ -107,15 +115,19 @@ NS_ARRAY* ns_array_create_from_buffer(void** array, uint64_t size)
 	return ns_array;
 }
 
-void ns_array_remove(NS_ARRAY* array, void* element)
+void ns_array_remove(const NS_ARRAY* array, const void* element)
 {
 	for (uint64_t i = 0; i < array->size; ++i)
-		if (array->elements[i] == element)
+		if (array->elements[i] == element) {
 			array->elements[i] = 0;
+			return;
+		}
 }
 
 void ns_array_free(NS_ARRAY* array)
 {
+	if(!array)
+		return;
 	array->size = 0;
 	free(array->elements);
 }

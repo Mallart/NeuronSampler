@@ -364,3 +364,10 @@ FodyWeavers.xsd
 
 # Object files
 *.o
+*.exe
+
+# Jetbrains editor files
+*.idea/
+*.ninja*
+*cmake-build-debug/*
+*cmake-build-release/*

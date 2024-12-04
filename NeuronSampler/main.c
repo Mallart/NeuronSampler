@@ -81,7 +81,7 @@ void* serialization_test()
 {
 	NS_MODEL* model = example_model();
 	model_feed_values(model, example_target());
-	//train_model(model, &target, 10000, .003);
+	train_model(model, example_target(), 10000, .003);
 	char* buffer = serialize_model(model);
 	NS_MODEL* copy = deserialize_model(buffer);
 	return 0;
@@ -89,6 +89,8 @@ void* serialization_test()
 
 void test()
 {
+	MEM_TEST
+
 	NS_MODEL* test_model = example_model();
 	double
 		t_inputs[] =
@@ -106,27 +108,20 @@ void test()
 		.inputs = t_inputs,
 		.outputs = t_output
 	};
-	int u;
-	debug("\nTarget ptr: %p ; u ptr: %p\n", &target.inputs[0], &u);
-	// debug("%s", ((&u & 1) ? "Ok something really bad is going on" : "No memory trashing detected"));
-	mdebug("Feeding values to model\n");
-	debug("Target p: %p\n", &target);
 	model_feed_values(test_model, &target);
-	mdebug("Fed values to model\n");
-	// it appears that the model's output neuron is freed near here for an unkown reason. 
-	// That's why the program crashes.
-	mdebug("Began training\n");
+	clock_t creation = benchmark_model_creation(example_model);
 	clock_t training = benchmark_training(train_model, test_model, &target, 100000, .001);
 	NS_NEURON* _output = test_model->output_neurons[0];
-	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f\n", 
-		training, 
+	printf("Model creation time (ms):%i\n", creation);
+	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f\n",
+		training,
 		_output->value,
 		_output->bias,
 		((NS_SYNAPSE*)_output->parents->elements[0])->weight
 	);
 
-	clock_t serialization_time = benchmark(serialization_test);
-	printf("Model serialization time (ms): %i\n", serialization_time);
+	// clock_t serialization_time = benchmark(serialization_test);
+	// printf("Model serialization time (ms): %i\n", serialization_time);
 	/*
 	double _inputs[] = { 3, 5 };
 	test_model->output_neurons[0] = _output;

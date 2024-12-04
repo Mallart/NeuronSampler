@@ -74,7 +74,7 @@ void destroy_synapse(NS_SYNAPSE* synapse);
 // creates a new neuron
 NS_NEURON* create_neuron();
 // creates a new array of n neurons
-NS_NEURON** create_layer(uint64_t n);
+NS_LAYER* create_layer(uint64_t n);
 // creates a new model from an array of input neurons
 NS_MODEL* create_model(NS_NEURON** input_neurons, uint64_t n_input, NS_NEURON** output_neurons, uint64_t n_output);
 // reset an existing neuron.
@@ -89,7 +89,7 @@ void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs);
 void bulk_bind_layers(NS_NEURON** parent_layer, uint64_t n_parent_layer_neurons, NS_NEURON** child_layer, uint64_t n_child_layer_neurons);
 // sets the activation function of an array of neurons
 void layer_set_function(double (*function)(double), NS_NEURON** layer, uint64_t n_neurons);
-// sets the activation function of an ns_array of neurons
+// sets the activation function of a ns_array of neurons
 void ns_layer_set_function(double (*function)(double), NS_LAYER* layer);
 
 // will replace all input values with the given ones.
@@ -109,7 +109,7 @@ void delete_model(NS_MODEL* model);
 char* serialize_neuron(NS_NEURON* neuron);
 NS_NEURON* deserialize_neuron(char* buffer);
 
-char* serialize_synpase(NS_SYNAPSE* synapse);
+char* serialize_synapse(NS_SYNAPSE* synapse);
 NS_SYNAPSE* deserialize_synapse(char* buffer);
 
 char* serialize_model(NS_MODEL* model);

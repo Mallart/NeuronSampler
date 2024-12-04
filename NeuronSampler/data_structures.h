@@ -75,7 +75,7 @@ NS_ARRAY* ns_array_append_no_duplicate(NS_ARRAY* array, void* element);
 NS_ARRAY* ns_array_create_from_buffer(void** array, uint64_t size);
 #define s_ns_array_create_from_buffer(array, array_size) ns_array_create_from_buffer((void**)array, array_size)
 // replaces an element with 0.
-void ns_array_remove(NS_ARRAY* array, void* element);
+void ns_array_remove(const NS_ARRAY* array, const void* element);
 void ns_array_free(NS_ARRAY* array);
 // returns true if the specified element exist in array
 bool ns_array_exists(NS_ARRAY* array, void* element);
