@@ -52,9 +52,7 @@ typedef struct NS_NEURON
 // "Given this input, I want this output".
 typedef struct NS_TARGET
 {
-	numerator n_inputs, n_outputs;
-	double* inputs;
-	double* outputs;
+	NS_VALUES_ARRAY inputs, outputs;
 } NS_TARGET;
 
 // A model consists of several neurons.
@@ -114,4 +112,12 @@ NS_SYNAPSE* deserialize_synapse(char* buffer);
 
 char* serialize_model(NS_MODEL* model);
 NS_MODEL* deserialize_model(char* buffer);
+#pragma endregion
+
+#pragma region TARGET
+
+NS_TARGET* create_target();
+NS_TARGET* create_target_from_const_arrays(double inputs[], double outputs[]);
+void delete_target(NS_TARGET* target);
+
 #pragma endregion

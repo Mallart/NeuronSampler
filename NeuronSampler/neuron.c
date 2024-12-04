@@ -296,12 +296,12 @@ void model_feed_values(NS_MODEL* model, NS_TARGET* target)
 	// constantly gets removed for no reason, so I put a save here (thanks MSVC)
 	// every variable seem corrupted atp
 	NS_NEURON* ns_output = model->output_neurons[0];
-	uint64_t n_values = min(model->n_input_neurons, target->n_inputs);
+	uint64_t n_values = min(model->n_input_neurons, target->inputs.size);
 	for (uint64_t i = 0; i < n_values; ++i)
 	{
 		model->input_neurons[i]->role |= LIT_STATE;
-		model->input_neurons[i]->value = target->inputs[i];
-		((NS_SYNAPSE*)model->input_neurons[i]->parents->elements[0])->input_value = target->inputs[i];
+		model->input_neurons[i]->value = *(double*)target->inputs.elements[i];
+		((NS_SYNAPSE*)model->input_neurons[i]->parents->elements[0])->input_value = *(double*)target->inputs.elements[i];
 	}
 	*model->output_neurons = ns_output;
 }
@@ -374,4 +374,32 @@ void delete_layer(NS_LAYER* layer)
 void delete_model(NS_MODEL* model)
 {
 	delete_layer(model_get_all_neurons(model));
+}
+
+NS_TARGET* create_target()
+{
+	NS_TARGET* target = malloc(sizeof(NS_TARGET));
+	if (!target)
+		return 0;
+	target->inputs = *ns_array_create();
+	target->outputs = *ns_array_create();
+	return target;
+}
+
+NS_TARGET* create_target_from_const_arrays(double inputs[], double outputs[])
+{
+	NS_TARGET* target = calloc(1, sizeof(NS_TARGET));
+	if(!target)
+		return 0;
+	if(inputs)
+		target->inputs = *s_ns_array_create_from_const_array(inputs, sizeof(inputs));
+	if(outputs)
+		target->inputs = *s_ns_array_create_from_const_array(outputs, sizeof(outputs));
+	return target;
+}
+
+void delete_target(NS_TARGET* target)
+{
+	memset(target, 0, sizeof(NS_TARGET));
+	free(target);
 }

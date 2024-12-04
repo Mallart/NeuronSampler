@@ -115,6 +115,20 @@ NS_ARRAY* ns_array_create_from_buffer(void** array, uint64_t size)
 	return ns_array;
 }
 
+NS_ARRAY* ns_array_create_from_const_array(void* array[], uint64_t size)
+{
+	NS_ARRAY* ns_array = ns_array_create();
+	MEM_TEST
+	// SEGMENTATION FAULT HERE
+	for (uint64_t i = 0; i < size; ++i)
+	{
+		void* element = malloc(sizeof(void*));
+		element = memcpy(element, array[i], sizeof(void*));
+		ns_array_append(ns_array, element);
+	}
+	return ns_array;
+}
+
 void ns_array_remove(const NS_ARRAY* array, const void* element)
 {
 	for (uint64_t i = 0; i < array->size; ++i)

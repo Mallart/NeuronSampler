@@ -12,11 +12,6 @@
 - GPU support
 - GCC compilation
 
-FIX
-
-- Problem with freeing neuron with id 14 in first instanciation, check why this can happen
-- layer_add_current_neurons has a hard time retrieving all the neurons without error
-
 */
 
 NS_MODEL* example_model()
@@ -59,6 +54,7 @@ NS_MODEL* example_model()
 
 NS_TARGET* example_target()
 {
+
 	double
 		t_inputs[] =
 	{
@@ -68,11 +64,7 @@ NS_TARGET* example_target()
 	{
 		9
 	};
-	NS_TARGET* target = malloc(sizeof(NS_TARGET));
-	target->n_inputs = CONST_ARRAY_SIZE(double, t_inputs);
-	target->n_outputs = CONST_ARRAY_SIZE(double, t_output);
-	target->inputs = t_inputs;
-	target->outputs = t_output;
+	NS_TARGET* target = create_target_from_const_arrays(t_inputs, t_output);
 	return target;
 }
 
@@ -101,16 +93,10 @@ void test()
 	{
 		9
 	};
-	NS_TARGET target =
-	{
-		.n_inputs = CONST_ARRAY_SIZE(double, t_inputs),
-		.n_outputs = CONST_ARRAY_SIZE(double, t_output),
-		.inputs = t_inputs,
-		.outputs = t_output
-	};
-	model_feed_values(test_model, &target);
+	NS_TARGET* target = example_target();
+	model_feed_values(test_model, target);
 	clock_t creation = benchmark_model_creation(example_model);
-	clock_t training = benchmark_training(train_model, test_model, &target, 100000, .001);
+	clock_t training = benchmark_training(train_model, test_model, target, 100000, .001);
 	NS_NEURON* _output = test_model->output_neurons[0];
 	printf("Model creation time (ms):%i\n", creation);
 	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f\n",
@@ -120,13 +106,13 @@ void test()
 		((NS_SYNAPSE*)_output->parents->elements[0])->weight
 	);
 
-	// clock_t serialization_time = benchmark(serialization_test);
-	// printf("Model serialization time (ms): %i\n", serialization_time);
-	/*
+	clock_t serialization_time = benchmark(serialization_test);
+	printf("Model serialization time (ms): %i\n", serialization_time);
 	double _inputs[] = { 3, 5 };
 	test_model->output_neurons[0] = _output;
-	model_query(test_model, &(NS_TARGET){.inputs = _inputs, CONST_ARRAY_SIZE(double, _inputs)});
+	model_query(test_model, create_target_from_const_arrays(_inputs, 0));
 	printf("\nResult of 3 + 5: %f", test_model->output_neurons[0]->value);
+	/*
 	*/
 }
 #endif

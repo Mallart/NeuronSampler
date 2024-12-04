@@ -7,7 +7,7 @@ void train_model(NS_MODEL* model, NS_TARGET* target, uint64_t epoch, double prec
 		{
 			neuron_forward(model->output_neurons[i]);
 			if(target)
-				neuron_backwards(model->output_neurons[i], target->outputs[i], precision);
+				neuron_backwards(model->output_neurons[i], *(double*)target->outputs.elements[i], precision);
 			else
 				neuron_backwards(model->output_neurons[i], REPLACE_THIS_VALUE_WITH_WORKING_ONE, precision);
 		}
