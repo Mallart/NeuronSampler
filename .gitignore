@@ -371,3 +371,9 @@ FodyWeavers.xsd
 *.ninja*
 *cmake-build-debug/*
 *cmake-build-release/*
+
+# Editors files
+.*/
+
+
+!.gitignore
