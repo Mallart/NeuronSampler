@@ -7,7 +7,7 @@
 // epoch is the number of trainings.
 void train_model(NS_MODEL* model, NS_TARGET* target, uint64_t epoch, double precision);
 // train the model using several targets.
-void mass_train_model(NS_MODEL* model, NS_DATASET* dataset, uint64_t epoch, double learning_rate);
+void mass_train_model(NS_MODEL* model, const NS_DATASET* dataset, uint64_t epoch, double learning_rate);
 // use the model with new input values
 void model_query(NS_MODEL* model, NS_TARGET* input);
 // saves the model in the given file.

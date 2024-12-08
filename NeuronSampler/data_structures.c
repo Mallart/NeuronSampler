@@ -65,7 +65,10 @@ NS_ARRAY* ns_array_create()
 NS_ARRAY* ns_array_append(NS_ARRAY* array, void* element)
 {
 	if (!array)
-		return ns_array_create();
+	{
+		array = ns_array_create();
+		free(array->elements);
+	}
 	if (!array->elements)
 	{
 		array->elements = malloc((array->size + 1) * sizeof(element));
@@ -85,7 +88,7 @@ NS_ARRAY* ns_array_append(NS_ARRAY* array, void* element)
 			array->elements = temp_arr;
 		else {
 			mdebug("Realloc failed");
-			exit(-1);
+			throw(EXCEPTION_NOT_ENOUGH_MEMORY);
 		}
 		array->elements[array->size] = element;
 		array->size++;
@@ -115,18 +118,23 @@ NS_ARRAY* ns_array_create_from_buffer(void** array, uint64_t size)
 	return ns_array;
 }
 
-NS_ARRAY* ns_array_create_from_const_array(void* array[], uint64_t size)
+NS_ARRAY* ns_array_create_from_const_array(void* array, uint64_t size)
 {
 	NS_ARRAY* ns_array = ns_array_create();
-	MEM_TEST
-	// SEGMENTATION FAULT HERE
 	for (uint64_t i = 0; i < size; ++i)
 	{
 		void* element = malloc(sizeof(void*));
-		element = memcpy(element, array[i], sizeof(void*));
+		element = memcpy(element, (array + i), sizeof(void*));
 		ns_array_append(ns_array, element);
 	}
 	return ns_array;
+}
+
+void* ns_array_get(NS_ARRAY* array, numerator index)
+{
+	if (!array || index > array->size || !array->elements)
+		return 0;
+	return array->elements[index];
 }
 
 void ns_array_remove(const NS_ARRAY* array, const void* element)

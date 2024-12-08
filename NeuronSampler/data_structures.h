@@ -20,6 +20,7 @@
 #endif
 
 typedef uint32_t NS_FLAG;
+typedef uint32_t numerator;
 
 enum NS_NEURON_FLAGS
 {
@@ -54,6 +55,7 @@ typedef NS_ARRAY NS_TARGETS_ARRAY;
 typedef NS_ARRAY NS_DATASET;
 
 typedef NS_NEURON_ARRAY NS_LAYER;
+#pragma region ARRAY
 // appends an element on an array of pointers and returns the new array
 // WARNING: can destroy the old array if there's not enough free space to add an element
 void* array_append(void** array, uint64_t array_size, void* element);
@@ -67,7 +69,9 @@ void array_remove(void** array, uint64_t array_size, void* element);
 bool array_exists(void** array, uint64_t array_size, void* element);
 #define s_array_exists(array, array_size, element) array_exists((void**)array, array_size, (void*)element)
 void** array_create_from_ns_array(NS_ARRAY* array);
+#pragma endregion
 
+#pragma region NS_ARRAY
 NS_ARRAY* ns_array_create();
 // appends an element on an array of pointers and returns the new array
 // WARNING: can destroy the old array if there's not enough free space to add an element
@@ -75,10 +79,14 @@ NS_ARRAY* ns_array_append(NS_ARRAY* array, void* element);
 NS_ARRAY* ns_array_append_no_duplicate(NS_ARRAY* array, void* element);
 NS_ARRAY* ns_array_create_from_buffer(void** array, uint64_t size);
 #define s_ns_array_create_from_buffer(array, array_size) ns_array_create_from_buffer((void**)array, array_size)
-NS_ARRAY* ns_array_create_from_const_array(void* array[], uint64_t size);
+NS_ARRAY* ns_array_create_from_const_array(void* array, uint64_t size);
 #define s_ns_array_create_from_const_array(array, array_size) ns_array_create_from_const_array((void**)array, array_size)
+// returns the pointer on an element in this array, or 0 if it's out of bounds.
+void* ns_array_get(NS_ARRAY* array, numerator index);
 // replaces an element with 0.
 void ns_array_remove(const NS_ARRAY* array, const void* element);
 void ns_array_free(NS_ARRAY* array);
 // returns true if the specified element exist in array
 bool ns_array_exists(NS_ARRAY* array, void* element);
+
+#pragma endregion

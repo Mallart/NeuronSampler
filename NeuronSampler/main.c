@@ -64,7 +64,7 @@ NS_TARGET* example_target()
 	{
 		9
 	};
-	NS_TARGET* target = create_target_from_const_arrays(t_inputs, t_output);
+	NS_TARGET* target = create_target_from_const_arrays(t_inputs, CONST_ARRAY_SIZE(double, t_inputs), t_output, CONST_ARRAY_SIZE(double, t_output));
 	return target;
 }
 
@@ -97,7 +97,7 @@ void test()
 	model_feed_values(test_model, target);
 	clock_t creation = benchmark_model_creation(example_model);
 	clock_t training = benchmark_training(train_model, test_model, target, 100000, .001);
-	NS_NEURON* _output = test_model->output_neurons[0];
+	NS_NEURON* _output = test_model->output_neurons->elements[0];
 	printf("Model creation time (ms):%i\n", creation);
 	printf("Model training time (ms): %i\n\nFirst neuron output value: %f \nbias: %f\nweight: %f\n",
 		training,
@@ -109,9 +109,9 @@ void test()
 	clock_t serialization_time = benchmark(serialization_test);
 	printf("Model serialization time (ms): %i\n", serialization_time);
 	double _inputs[] = { 3, 5 };
-	test_model->output_neurons[0] = _output;
-	model_query(test_model, create_target_from_const_arrays(_inputs, 0));
-	printf("\nResult of 3 + 5: %f", test_model->output_neurons[0]->value);
+	test_model->output_neurons->elements[0] = _output;
+	model_query(test_model, create_target_from_const_arrays(_inputs, CONST_ARRAY_SIZE(double, _inputs), 0, 0));
+	printf("\nResult of 3 + 5: %f", ((NS_NEURON*)test_model->output_neurons->elements[0])->value);
 	/*
 	*/
 }

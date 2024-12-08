@@ -13,7 +13,6 @@ static uint64_t NEURON_NUMBER = 1;
 struct NS_NEURON;
 struct NS_SYNAPSE;
 
-typedef uint32_t numerator;
 
 typedef struct NS_SYNAPSE
 {
@@ -59,10 +58,13 @@ typedef struct NS_TARGET
 typedef struct NS_MODEL
 {
 	// model's input neurons
+	NS_ARRAY *input_neurons, *output_neurons;
+	/*
 	NS_NEURON** input_neurons;
 	NS_NEURON** output_neurons;
 	numerator n_input_neurons;
 	numerator n_output_neurons;
+	*/
 } NS_MODEL;
 
 // creates a new synapse between two neurons (binds them automatically)
@@ -102,6 +104,8 @@ void delete_neuron(NS_NEURON* neuron);
 void delete_layer(NS_LAYER* layer);
 void delete_model(NS_MODEL* model);
 
+void print_model_neurons(NS_MODEL* model);
+
 #pragma region SERIALIZATION
 
 char* serialize_neuron(NS_NEURON* neuron);
@@ -117,7 +121,7 @@ NS_MODEL* deserialize_model(char* buffer);
 #pragma region TARGET
 
 NS_TARGET* create_target();
-NS_TARGET* create_target_from_const_arrays(double inputs[], double outputs[]);
+NS_TARGET* create_target_from_const_arrays(double inputs[], numerator n_inputs, double outputs[], numerator n_outputs);
 void delete_target(NS_TARGET* target);
 
 #pragma endregion

@@ -2,18 +2,22 @@
 
 void train_model(NS_MODEL* model, NS_TARGET* target, uint64_t epoch, double precision)
 {
+	printf("train_model\n");
+	print_model_neurons(model);
+	printf("\n");
 	for(uint64_t _e = 0; _e < epoch; ++_e)
-		for (uint64_t i = 0; i < model->n_output_neurons; ++i)
+		for (uint64_t i = 0; i < model->output_neurons->size; ++i)
 		{
-			neuron_forward(model->output_neurons[i]);
+			MEM_TEST
+			neuron_forward((NS_NEURON*)ns_array_get(model->output_neurons, i));
 			if(target)
-				neuron_backwards(model->output_neurons[i], *(double*)target->outputs.elements[i], precision);
+				neuron_backwards(model->output_neurons->elements[i], *(double*)target->outputs.elements[i], precision);
 			else
-				neuron_backwards(model->output_neurons[i], REPLACE_THIS_VALUE_WITH_WORKING_ONE, precision);
+				neuron_backwards(model->output_neurons->elements[i], REPLACE_THIS_VALUE_WITH_WORKING_ONE, precision);
 		}
 }
 
-void mass_train_model(NS_MODEL* model, NS_DATASET* dataset, uint64_t epoch, double learning_rate)
+void mass_train_model(NS_MODEL* model, const NS_DATASET* dataset, const uint64_t epoch, const double learning_rate)
 {
 	for (int i = 0; i < dataset->size; ++i)
 		train_model(model, dataset->elements[i], epoch, learning_rate);
@@ -22,9 +26,9 @@ void mass_train_model(NS_MODEL* model, NS_DATASET* dataset, uint64_t epoch, doub
 void model_query(NS_MODEL* model, NS_TARGET* input)
 {
 	model_feed_values(model, input);
-	int n_neurons = model->n_output_neurons;
+	int n_neurons = model->output_neurons->size;
 	for (int _out = 0; _out < n_neurons; ++_out)
-		neuron_forward(model->output_neurons[_out]);
+		neuron_forward(model->output_neurons->elements[_out]);
 
 }
 

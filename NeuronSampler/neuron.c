@@ -71,21 +71,19 @@ NS_MODEL* create_model(NS_NEURON** input, const uint64_t n_input, NS_NEURON** ou
 		!output
 		)
 		return 0;
-	model->n_input_neurons = n_input;
-	model->input_neurons = input;
-	model->output_neurons = output;
-	model->n_output_neurons = n_output;
+	model->input_neurons = s_ns_array_create_from_buffer((void**)input, n_input);
+	model->output_neurons = s_ns_array_create_from_buffer((void**)output, n_output);
 	for (uint64_t i = 0; i < n_input; ++i)
 	{
 		// no parent means it's an input neuron
-		NS_SYNAPSE* _synapse = create_synapse(0, model->input_neurons[i]);
+		NS_SYNAPSE* _synapse = create_synapse(0, model->input_neurons->elements[i]);
 		_synapse->child->parents->elements[0] = _synapse;
-		model->input_neurons[i]->role |= ROLE_INPUT;
+		((NS_NEURON*)model->input_neurons->elements[i])->role |= ROLE_INPUT;
 
 	}
 	for (uint64_t i = 0; i < n_output; ++i)
-		model->output_neurons[i]->role |= ROLE_OUTPUT;
-	layer_set_function(&raw, model->input_neurons, model->n_input_neurons);
+		((NS_NEURON*)model->output_neurons->elements[i])->role |= ROLE_OUTPUT;
+	layer_set_function(&raw, (NS_NEURON**)model->input_neurons->elements, model->input_neurons->size);
 	return model;
 }
 
@@ -107,7 +105,12 @@ void init_neuron(NS_NEURON* neuron)
 double neuron_forward(NS_NEURON* neuron)
 {
 	if(!neuron)
+	{
 		mdebug("Neuron was null while training. Exiting the program.");
+		throw(EXCEPTION_INVALID_POINTER);
+	}
+	MEM_TEST
+	// TODO: fix segfault on here, second input neuron is identified as 0xabababababababab
 	if (!neuron->role)
 		return .0f;
 	neuron->role |= LIT_STATE;
@@ -157,7 +160,7 @@ void neuron_backwards(NS_NEURON* neuron, double target, double learning_rate)
 void set_input_values(NS_MODEL* model, float* input_values, uint64_t n_inputs)
 {
 	for (uint64_t i = 0; i < n_inputs; ++i)
-		((NS_SYNAPSE*)model->input_neurons[i]->parents->elements[0])->input_value = input_values[i];
+		((NS_SYNAPSE*)((NS_NEURON*)model->input_neurons->elements[i])->parents->elements[0])->input_value = input_values[i];
 }
 
 void bulk_bind_layers(NS_NEURON** parent_layer, uint64_t n_parent_layer_neurons, NS_NEURON** child_layer, uint64_t n_child_layer_neurons)
@@ -230,9 +233,9 @@ char* serialize_model(NS_MODEL* model)
 		return 0;
 	// reading caret
 	size_t caret = 0;
-	memcpy(buffer, &model->n_input_neurons, sizeof(numerator));
+	memcpy(buffer, &model->input_neurons->size, sizeof(numerator));
 	caret += sizeof(numerator);
-	memcpy(buffer + caret, &model->n_output_neurons, sizeof(numerator));
+	memcpy(buffer + caret, &model->output_neurons->size, sizeof(numerator));
 	caret += sizeof(numerator);
 	// number of serialized neurons
 	memcpy(buffer + caret, &neurons->size, sizeof(numerator));
@@ -253,9 +256,12 @@ NS_MODEL* deserialize_model(char* buffer)
 	// reading caret in buffer
 	uint64_t n_neurons = 0;
 	size_t caret = 0;
-	memcpy(&model->n_input_neurons, buffer + caret, sizeof(numerator));
+	model->input_neurons	= ns_array_create();
+	model->output_neurons	= ns_array_create();
+	numerator in_size, out_size;
+	memcpy(&in_size, buffer + caret, sizeof(numerator));
 	caret += sizeof(numerator);
-	memcpy(&model->n_output_neurons, buffer + caret, sizeof(numerator));
+	memcpy(&out_size, buffer + caret, sizeof(numerator));
 	caret += sizeof(numerator);
 	memcpy(&n_neurons, buffer + caret, sizeof(uint64_t));
 	caret += sizeof(uint64_t);
@@ -266,44 +272,38 @@ NS_MODEL* deserialize_model(char* buffer)
 		if (!neuron_buffer)
 			return 0;
 		memcpy(neuron_buffer, buffer, sizeof(NS_NEURON));
+		caret += sizeof(NS_NEURON);
 		ns_array_append(neurons, deserialize_neuron(neuron_buffer));
 		free(neuron_buffer);
 	}
-	NS_LAYER* input_layer	= ns_array_create();
-	NS_LAYER* hidden_layer	= ns_array_create();
-	NS_LAYER* output_layer	= ns_array_create();
+	NS_LAYER* hidden_layer = ns_array_create();
 	for (uint64_t i = 0; i < n_neurons; ++i)
 	{
 		NS_NEURON* _neuron = neurons->elements[i];
 		if (_neuron->role & ROLE_INPUT)
-			ns_array_append(input_layer, _neuron);
+			ns_array_append(model->input_neurons, _neuron);
 		else if (_neuron->role & ROLE_OUTPUT)
-			ns_array_append(output_layer, _neuron);
+			ns_array_append(model->output_neurons, _neuron);
 		else
 			ns_array_append(hidden_layer, _neuron);
 	}
-	NS_MODEL* final = create_model((NS_NEURON**)input_layer->elements, input_layer->size, (NS_NEURON**)output_layer->elements, output_layer->size);
-	free(input_layer);
+	MEM_TEST
+	//NS_MODEL* final = create_model((NS_NEURON**)input_layer->elements, input_layer->size, (NS_NEURON**)output_layer->elements, output_layer->size);
 	free(hidden_layer);
-	free(output_layer);
 	free(neurons);
-	free(model);
-	return final;
+	return model;
 }
 
 void model_feed_values(NS_MODEL* model, NS_TARGET* target)
 {
-	// constantly gets removed for no reason, so I put a save here (thanks MSVC)
-	// every variable seem corrupted atp
-	NS_NEURON* ns_output = model->output_neurons[0];
-	uint64_t n_values = min(model->n_input_neurons, target->inputs.size);
+	uint64_t n_values = min(model->input_neurons->size, target->inputs.size);
 	for (uint64_t i = 0; i < n_values; ++i)
 	{
-		model->input_neurons[i]->role |= LIT_STATE;
-		model->input_neurons[i]->value = *(double*)target->inputs.elements[i];
-		((NS_SYNAPSE*)model->input_neurons[i]->parents->elements[0])->input_value = *(double*)target->inputs.elements[i];
+		((NS_NEURON*)ns_array_get(model->input_neurons, i))->role |= LIT_STATE;
+		((NS_NEURON*)ns_array_get(model->input_neurons, i))->value = *(double*)target->inputs.elements[i];
+		NS_NEURON* input_neuron = ns_array_get(model->input_neurons, i);
+		((NS_SYNAPSE*)ns_array_get(input_neuron->parents, 0))->input_value = *(double*)ns_array_get(&target->inputs, i);
 	}
-	*model->output_neurons = ns_output;
 }
 
 void layer_add_current_neurons(NS_LAYER* layer, NS_NEURON* neuron)
@@ -319,8 +319,8 @@ void layer_add_current_neurons(NS_LAYER* layer, NS_NEURON* neuron)
 NS_LAYER* model_get_all_neurons(NS_MODEL* model)
 {
 	NS_LAYER* layer = ns_array_create();
-	for (uint64_t i = 0; i < model->n_input_neurons; ++i)
-		layer_add_current_neurons(layer, model->input_neurons[i]);
+	for (uint64_t i = 0; i < model->input_neurons->size; ++i)
+		layer_add_current_neurons(layer, model->input_neurons->elements[i]);
 	return layer;
 }
 
@@ -376,6 +376,13 @@ void delete_model(NS_MODEL* model)
 	delete_layer(model_get_all_neurons(model));
 }
 
+void print_model_neurons(NS_MODEL* model)
+{
+	NS_LAYER* neurons = model_get_all_neurons(model);
+	for (uint64_t i = 0; i < neurons->size; ++i)
+		printf("Neuron #%i: %p\n", i, ns_array_get(neurons, i));
+}
+
 NS_TARGET* create_target()
 {
 	NS_TARGET* target = malloc(sizeof(NS_TARGET));
@@ -386,15 +393,15 @@ NS_TARGET* create_target()
 	return target;
 }
 
-NS_TARGET* create_target_from_const_arrays(double inputs[], double outputs[])
+NS_TARGET* create_target_from_const_arrays(double inputs[], numerator n_inputs, double outputs[], numerator n_outputs)
 {
 	NS_TARGET* target = calloc(1, sizeof(NS_TARGET));
 	if(!target)
 		return 0;
 	if(inputs)
-		target->inputs = *s_ns_array_create_from_const_array(inputs, sizeof(inputs));
+		target->inputs = *s_ns_array_create_from_const_array(inputs, n_inputs);
 	if(outputs)
-		target->inputs = *s_ns_array_create_from_const_array(outputs, sizeof(outputs));
+		target->outputs = *s_ns_array_create_from_const_array(outputs, n_outputs);
 	return target;
 }
 
